@@ -347,7 +347,7 @@ const RACE_WEEKS = [
     {t:"Tue 20 Apr", items:[["j2-prep","Trail Prep 1, then 40 min easy with 4 × 20 s strides. No speed session"],["j2-pack","Run with the full race vest loaded, to check it doesn't bounce or rub"]]},
     {t:"Wed 21 Apr", items:[["j3-run","Easy 30–40 min. No lifting"],["j3-shoes","Shoes and socks you've already done a 3-hour run in"],["j3-poles","Decide on poles, if allowed, and practise folding them"]]},
     {t:"Thu 22 Apr", items:[["j4-rest","Rest or 20 min easy"],["j4-course","Study the 34 km profile and aid stations. Mark the long climbs to hike"],["j4-fuel","Plan fuel: about 60 g carbohydrate an hour from the first hour, and what you'll take at each aid station. Start the carb build today"]]},
-    {t:"Fri 23 Apr", items:[["j5-run","20 min easy with a few strides"],["j5-carbs","Carbohydrate at every meal, about 7 g per kg. Nothing new"],["j5-sleep","8 hours of sleep. Friday night counts more than Saturday"],["j5-weather","Check the forecast and pack for rain and cold on the tops"]]},
+    {t:"Fri 23 Apr", items:[["j5-run","20 min easy with a few strides"],["j5-carbs","Carbohydrate at every meal, about 610 g a day (7 g per kg). Nothing new"],["j5-sleep","8 hours of sleep. Friday night counts more than Saturday"],["j5-weather","Check the forecast and pack for rain and cold on the tops"]]},
     {t:"Sat 24 Apr", items:[["j6-shake","Rest or a 15 min shakeout"],["j6-pack","Pack the vest: mandatory kit, gels or bars for 5–6 hours, 1–1.5 l of water, salt"],["j6-dinner","Familiar dinner, early"],["j6-bed","In bed early. Alarm set, kit by the door"]]},
     {t:"Sun 25 Apr · Race", items:[["j7-bfast","Familiar breakfast 3 hours before the start"],["j7-pace","Start slower than feels right. Hike every steep climb"],["j7-eat","Eat every 30–40 min from the start, drink to thirst"],["j7-down","Save the legs for the last descents: short, quick steps"]]}
   ]}
@@ -375,7 +375,7 @@ const FUEL_RACE = {
     "A few sips from the 500 ml flask with each gel, then drink by thirst.",
     "No carb-loading needed. Normal carb-centred meals in race week, a bit more on Friday and Saturday."]},
   jablanik: {title:"Jablanik, about 5–6 hours", items:[
-    "Thursday to Saturday: carbohydrate at every meal, about 7 g per kg of body weight a day (around 500 g at 70 kg). In a study the book cites, marathoners who ate that much in the days before ran far faster in the last miles.",
+    "Thursday to Saturday: carbohydrate at every meal, about 7 g per kg of body weight a day (about 610 g for you at 87 kg). In a study the book cites, marathoners who ate that much in the days before ran far faster in the last miles.",
     "Familiar breakfast 3 hours before the start.",
     "About 60 g of carbohydrate an hour from the first hour: two gels an hour, or a gel plus half a banana or a bar.",
     "From the second hour, mix in real food when you get hungry. Refill water at aid stations and drink by thirst.",
@@ -383,7 +383,7 @@ const FUEL_RACE = {
     "Practise this exact plan, with the same gels and food, on Sunday long runs from mid-February."]}
 };
 const FUEL_HEALTH = [
-  "Daily carbohydrate: for up to about 2 hours of training a day, 5–7 g per kg of body weight (350–490 g at 70 kg). Don't count every day. Check a day or two if training starts to feel flat.",
+  "Daily carbohydrate: for up to about 2 hours of training a day, 5–7 g per kg of body weight (435–610 g for you at 87 kg). Don't count every day. Check a day or two if training starts to feel flat.",
   "Oily fish twice a week (mackerel, sardines, salmon), or a fish oil with about 1,000 mg of EPA and DHA.",
   "If you feel flat for weeks, ask your doctor to check ferritin and vitamin D. Ferritin isn't on a standard blood panel, and vitamin D runs low in winter. Don't take iron unless a test says so."
 ];
@@ -392,7 +392,7 @@ function fuelTip(d){
   const dow = d.getDay(), w = weekOf(d), p = phaseOf(w), rw = raceWeekFor(d);
   const race = RACES.findIndex(r=>iso(r.date)===iso(d));
   if(race>=0){ const f = FUEL_RACE[race===0?"divca":"jablanik"]; return "Race day. "+f.items.slice(race===0?0:1, race===0?3:4).join(" "); }
-  if(rw && rw.id==="jablanik" && (dow===4||dow===5||dow===6)) return "Carb build for Sunday: carbohydrate at every meal and snack, about 7 g per kg today. Familiar foods only.";
+  if(rw && rw.id==="jablanik" && (dow===4||dow===5||dow===6)) return "Carb build for Sunday: carbohydrate at every meal and snack, about 7 g per kg, so around 610 g today. Familiar foods only.";
   if(rw && rw.id==="divca" && (dow===5||dow===6)) return "A little more carbohydrate than usual today. Familiar foods only, and an early dinner on Saturday.";
   if(dow===0){
     if(w>=13 && w<=21) return "Practise the Jablanik plan: about 60 g of carbohydrate an hour from the first hour, with the gels and food you'll race with. Drink by thirst.";
