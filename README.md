@@ -1,55 +1,27 @@
-# Trail Strength Log on goblin
+# Trail Strength Log
 
-Two files do the work. `index.html` is the app, and `server.py` serves it and saves your log to `data.json`. The server needs only Python 3.8 or newer, with nothing to install.
+A training log for the Divča and Jablanik strength plan. `index.html` is the app, and `server.py` serves it and saves the log to `data.json`. The server needs only Python 3.8 or newer, with nothing to install.
 
-## 1. Copy the files
+## How it gets to goblin
 
-```sh
-ssh goblin 'mkdir -p ~/trail-app'
-scp index.html server.py goblin:~/trail-app/
-```
+goblin pulls this repo every 3 minutes with a read-only deploy key. When `main` has a new commit, it updates its copy and restarts the app. Nothing outside goblin can reach it: to ship a change, push to `main`.
 
-## 2. Try it
+| What | Where on goblin |
+| --- | --- |
+| App checkout (owned by user `apps`) | `/srv/apps/trail-strength-app` |
+| Your log | `/srv/apps-data/trail-strength-app/data.json` (and `.bak`) |
+| Read-only deploy key | `/var/lib/apps/.ssh/trail_deploy` |
+| App service | `trail-app.service`, listening on `127.0.0.1:8787` |
+| Updater | `trail-pull.timer` → `deploy/pull.sh`, then `trail-restart.path` restarts the app |
 
-```sh
-ssh goblin
-cd ~/trail-app && python3 server.py
-```
+The log is outside the checkout, so a pull can never overwrite it. First-time setup is in [GOBLIN-SETUP.md](GOBLIN-SETUP.md).
 
-It listens on `127.0.0.1:8787`, which only goblin itself can reach. Stop it with Ctrl+C once you've seen it start.
+Changes to the files in `deploy/` that end in `.service`, `.timer` or `.path` need `sudo sh /srv/apps/trail-strength-app/deploy/install.sh` once more on goblin. Changes to `index.html` and `server.py` go live by themselves.
 
-## 3. Make it reachable on your tailnet (HTTPS)
-
-```sh
-sudo tailscale serve --bg 8787
-```
-
-Open `https://goblin.<your-tailnet>.ts.net/` on your phone, and add it to your home screen. Only devices on your tailnet can open it. The app has no login, so don't use `tailscale funnel`, which would make it public.
-
-If you don't want `tailscale serve`, run `TSL_HOST=0.0.0.0 python3 server.py` and open `http://goblin:8787/`. Then make sure your firewall only lets the tailnet reach port 8787.
-
-## 4. Keep it running (systemd)
-
-Save this as `/etc/systemd/system/trail-app.service`, replacing `YOURUSER`:
-
-```ini
-[Unit]
-Description=Trail Strength Log
-After=network-online.target
-
-[Service]
-User=YOURUSER
-WorkingDirectory=/home/YOURUSER/trail-app
-ExecStart=/usr/bin/python3 /home/YOURUSER/trail-app/server.py
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-```
+## Run it locally
 
 ```sh
-sudo systemctl daemon-reload
-sudo systemctl enable --now trail-app
+python3 server.py   # http://127.0.0.1:8787
 ```
 
 ## How syncing works

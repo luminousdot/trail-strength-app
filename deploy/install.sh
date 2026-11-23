@@ -29,4 +29,5 @@ done
 
 systemctl daemon-reload
 systemctl enable --now trail-app.service trail-restart.path trail-pull.timer
+systemctl restart trail-app.service
 systemctl --no-pager --lines=0 status trail-app.service trail-pull.timer
