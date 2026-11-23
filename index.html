@@ -138,6 +138,9 @@ details.prep .body{padding:0 16px 16px;display:flex;flex-direction:column;gap:10
 .exhead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
 .rx{font-weight:600;font-size:14px;white-space:nowrap;padding:3px 8px;border-radius:8px;background:var(--sunk)}
 .how{font-size:14px;color:var(--muted)}
+.demo{width:100%}
+.demobtn{display:inline-flex;align-items:center;gap:6px}
+.demo iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:12px;display:block;background:#000}
 .why{display:flex;gap:6px;align-items:flex-start;font-size:13px;color:var(--muted);font-style:italic}
 .why .icon{flex:none;margin-top:2px}
 .principles{display:flex;flex-direction:column;gap:12px;margin:0;padding:0;list-style:none}
@@ -301,6 +304,8 @@ const B = [
   {id:"tippy", name:"Tippy twist", reps:"8 per leg", noKg:true, cap:2, how:"Balance on one leg, hinge forward, rotate the hips down and up. Big toe stays down.", why:"Balance with the hip rotating over a steady foot, the way you land on uneven ground."},
   {id:"carry", name:"Suitcase carry", reps:"30 s per side", sets:4, how:"Bell in one hand, stand tall, no lean. Rest 45 s.", why:"Stay tall while loaded on one side, like a pole plant or a stumble."}
 ];
+// Demo videos (YouTube, checked embeddable 23 Nov 2026). Loaded only when tapped, via youtube-nocookie.
+const DEMOS = {"rfess": {"id": "iANV_6_2N_o", "by": "Horton Barbell"}, "slrdl": {"id": "9inxLLbsQPw", "by": "Zehring Physical Therapy"}, "swing": {"id": "yeB_J0rqc5Q", "by": "Cavemantraining"}, "hipthrust": {"id": "D2nNU3FonZE", "by": "Rehab My Patient"}, "stepdown": {"id": "Ig_Qo-GKjRc", "by": "MyPhysioSays"}, "calf": {"id": "3g5Mb3Y9sFU", "by": "Perfect Balance Clinic"}, "copen": {"id": "nhGK-DxiGBE", "by": "Physio Plus Fitness"}, "stepup": {"id": "W_iyzcfJbOk", "by": "The Fitness Academy"}, "latlunge": {"id": "AotXnGBys6o", "by": "Rehab My Patient"}, "spanish": {"id": "-ksofnvkohI", "by": "Michael Braccio"}, "tke": {"id": "siJKZ-c_P44", "by": "Balance In Motion"}, "bkcalf": {"id": "-XeTMSjpkCE", "by": "Mathew Hawkes"}, "tib": {"id": "lBCRdjdWiTI", "by": "Balance In Motion"}, "carry": {"id": "Q1GjhRDAil0", "by": "Rehab My Patient"}, "pogo": {"id": "hjprPAnfqoQ", "by": "Drs. Mike & Kelly Swann"}, "splitjump": {"id": "m0IrF39BxI0", "by": "SKLZ"}, "stairbound": {"id": "swKfVF81dmY", "by": "Stronger Runner"}, "lunge": {"id": "oV97EckMQlo", "by": "OPEX Fitness"}};
 const PRINCIPLES = [
   ["Precision before load","Learn to move well with bodyweight and bands first, then add weight. That's why Trail Prep comes before your runs."],
   ["Repeat, but vary","The same moves often, in rotating versions. Your body learns from both, so Trail Prep alternates between two circuits."],
@@ -613,9 +618,16 @@ function renderToday(){
         <button class="chk" id="done-${x.id}-${i}" aria-pressed="${!!e.done[i]}" aria-label="Set ${i+1} done">${ico("check")}</button>`;
     }
     const block = el(`<section class="card ex" id="ex-${x.id}"><div class="exhead"><h3>${x.name}</h3><span class="rx num">${x.sets}${extra?"+1L":""} × ${x.reps}</span></div>
-      <p class="how">${x.how}</p>${x.why?`<p class="why">${ico("info","sm")}<span>${x.why}</span></p>`:""}${prevTxt?`<p class="last">${ico("history","sm")}<span>${prevTxt}</span></p>`:""}<div class="sets">${rows}</div></section>`);
+      <p class="how">${x.how}</p>${DEMOS[x.id]?`<div class="demo" data-demo="${DEMOS[x.id].id}"><button class="ghost demobtn" type="button">${ico("right","sm")}Watch demo <span class="note">· ${esc(DEMOS[x.id].by)}</span></button></div>`:""}${x.why?`<p class="why">${ico("info","sm")}<span>${x.why}</span></p>`:""}${prevTxt?`<p class="last">${ico("history","sm")}<span>${prevTxt}</span></p>`:""}<div class="sets">${rows}</div></section>`);
     list.appendChild(block);
     const card = list.querySelector("#ex-"+x.id);
+    const demo = card.querySelector(".demo");
+    if(demo) demo.querySelector("button").onclick=()=>{
+      const f=document.createElement("iframe");
+      f.src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(demo.dataset.demo)+"?autoplay=1&rel=0&playsinline=1&modestbranding=1";
+      f.title=x.name+" demo"; f.allow="autoplay; encrypted-media; picture-in-picture; fullscreen"; f.allowFullscreen=true; f.loading="lazy";
+      demo.replaceChildren(f);
+    };
     const markCard = ()=>{ let all=true; for(let i=0;i<n;i++) if(!e.done[i]) all=false; card.classList.toggle("complete", all); };
     for(let i=0;i<n;i++){
       const kg = list.querySelector(`#kg-${x.id}-${i}`), rp = list.querySelector(`#reps-${x.id}-${i}`), dn = list.querySelector(`#done-${x.id}-${i}`);
