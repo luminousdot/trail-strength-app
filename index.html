@@ -106,6 +106,11 @@ button,label.btn,summary{cursor:pointer;touch-action:manipulation}
 .linkbtn{border:0;background:none;color:var(--accent-text);font-weight:600;font-size:14px;padding:4px 8px;min-height:32px;border-radius:8px}
 .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--sunk);padding:4px;border-radius:12px}
 .seg button{border:0;background:transparent;font-weight:600;font-size:15px;min-height:40px;border-radius:9px;color:var(--muted)}
+.seg.pick{grid-template-columns:1fr 1.4fr}
+.seg .pickwrap{display:block;border-radius:9px;position:relative}
+.seg .pickwrap select{width:100%;height:100%;min-height:40px;border:0;background:transparent;font:inherit;font-weight:600;font-size:15px;color:var(--muted);padding:0 10px;border-radius:9px;appearance:auto}
+.seg .pickwrap[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 3px rgb(0 0 0 / .15)}
+.seg .pickwrap[aria-pressed="true"] select{color:var(--fg)}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 3px rgb(0 0 0 / .15)}
 #view{display:flex;flex-direction:column;gap:12px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow)}
@@ -304,65 +309,113 @@ const RACES = [
   {name:"Divča Winter Trail", short:"Divča", date:new Date(2027,2,7), spec:"15 km · 640 m+"},
   {name:"Jablanik Trail", short:"Jablanik", date:new Date(2027,3,25), spec:"34 km · 1800 m+"}
 ];
+// Running Rewired (Jay Dicharry, 2017) program, home version: 14 kg kettlebell, bands, stairs.
+// Precision workouts 1-3 (15-20 min), performance workouts 7-10, power workouts 13-14 (about 45 min).
+// Every fourth week: precision only. Six weeks before Jablanik: power workouts. Last 11-14 days: half volume.
 const PHASES = [
-  {w:[1,4], name:"Foundation", sets:3, reps:"8–10", rpe:"7", note:"Learn the moves with 14 kg, then add tempo and pauses."},
-  {w:[5,5], name:"Recovery", sets:0, reps:"–", rpe:"–", noLift:true, note:"Holidays: no lifting. Trail Prep before your runs only."},
-  {w:[6,8], name:"Strength", sets:4, reps:"6", rpe:"8", note:"Heavier bell for split squat, RDL, hip thrust and step-downs."},
-  {w:[9,9], name:"Recovery", sets:0, reps:"–", rpe:"–", noLift:true, note:"Drop Sessions A and B, keep Trail Prep."},
-  {w:[10,11], name:"Power and trail", sets:3, reps:"5", rpe:"8", power:true, note:"Jumps first in Session A, 6 weeks out from Divča."},
-  {w:[12,12], name:"Lighter", sets:2, reps:"5", rpe:"7", onlyA:true, note:"Session A only, no jumps."},
-  {w:[13,14], name:"Power and trail", sets:3, reps:"5", rpe:"8", power:true, note:"Week 14 at 2 sets."},
-  {w:[15,15], name:"Divča race week", sets:2, reps:"5", rpe:"5–6", onlyB:true, note:"Session B on Monday only, Trail Prep Tuesday. Race Sunday 7 March."},
-  {w:[16,16], name:"Recovery", sets:0, reps:"–", rpe:"–", noLift:true, note:"Trail Prep only until legs feel normal."},
-  {w:[17,19], name:"Jablanik build", sets:3, reps:"6", rpe:"8", power:true, jablanik:true, note:"Step-downs 4 × 8, walking lunges added. Jumps weekly, 6 weeks out."},
-  {w:[20,20], name:"Lighter", sets:2, reps:"6", rpe:"7", onlyA:true, jablanik:true, note:"Session A only."},
-  {w:[21,21], name:"Taper", sets:2, reps:"5", rpe:"7", note:"Keep the weight, cut the sets."},
-  {w:[22,22], name:"Jablanik race week", sets:2, reps:"5", rpe:"5", onlyB:true, note:"Monday 19 April only, then Trail Prep Tuesday. Race Sunday 25 April."}
+  {w:[1,3], name:"Build", kind:"build", note:"Monday precision circuit, Wednesday and Saturday Simple & Sinister. Two-arm swings only while you learn."},
+  {w:[4,4], name:"Recovery", kind:"rec", note:"Monday precision circuit and Wednesday S&S. No Saturday session."},
+  {w:[5,7], name:"Build", kind:"build", note:"Monday precision, Wednesday and Saturday S&S. Move to one-arm swings when they feel solid."},
+  {w:[8,8], name:"Recovery", kind:"rec", note:"Monday precision and Wednesday S&S only."},
+  {w:[9,11], name:"Build", kind:"build", note:"Monday precision, Wednesday and Saturday S&S. Go up a bell when 10 × 10 feels easy."},
+  {w:[12,12], name:"Recovery", kind:"rec", note:"Monday precision and Wednesday S&S only."},
+  {w:[13,14], name:"Build", kind:"build", note:"Monday precision, Wednesday and Saturday S&S. Divča is a tune-up race."},
+  {w:[15,15], name:"Divča race week", kind:"race", note:"Precision circuit on Monday only. Race Sunday 7 March."},
+  {w:[16,16], name:"Recovery", kind:"rec", note:"Monday precision and Wednesday S&S only."},
+  {w:[17,19], name:"Power", kind:"power", note:"Six weeks to Jablanik: Running Rewired power workout on Wednesday, S&S on Saturday."},
+  {w:[20,20], name:"Recovery", kind:"rec", note:"Monday precision and Wednesday S&S only."},
+  {w:[21,21], name:"Taper", kind:"power", half:true, note:"Power workout at half volume. Keep the speed, cut the sets. S&S on Saturday."},
+  {w:[22,22], name:"Jablanik race week", kind:"race", half:true, note:"Power workout at half volume on Monday, nothing after. Race Sunday 25 April."}
 ];
-const POWER = [
-  {id:"pogo", name:"Pogo hops", reps:"20", sets:3, how:"Quick, stiff ankles, small hops.", acc:true, noKg:true, why:"Builds the spring: stiff ankles and short ground contact store and return energy."},
-  {id:"splitjump", name:"Split jump onto a stair", reps:"5 per leg", sets:3, how:"One foot on the stair, drive up, switch legs in the air. No double bounce.", acc:true, noKg:true, why:"Fast force from one leg into the ground, the way you push up a climb."},
-  {id:"stairbound", name:"Stair bounds", reps:"12 s", sets:5, how:"Both feet, up a flight of stairs, short ground contact. Rest 90 s.", acc:true, noKg:true, why:"Power with quick contacts. If you double-bounce, go back to one step at a time."}
-];
-const A = [
-  {id:"rfess", name:"Goblet rear-foot elevated split squat", main:true, single:true, knee:true, how:"Bell at chest, back foot on the 2nd or 3rd stair, lower in 3 s.", why:"Single-leg strength is running strength: every stride lands on one leg."},
-  {id:"slrdl", name:"Single-leg RDL", main:true, single:true, how:"Bell in the hand opposite the standing leg.", why:"Teaches the hip, not the knee or back, to control the landing leg."},
-  {id:"swing", name:"Kettlebell swing", reps:"12", how:"Hip snap, not a squat. Rest 90 s.", why:"Hips drive, the back stays still. That hinge is what pushes you forward."},
-  {id:"hipthrust", name:"Kettlebell hip thrust", main:true, how:"Shoulders on the bottom stair, bell on your hips, rise to a straight line, no higher.", why:"Strong glutes push you horizontally. Stop at a straight line, never arch the low back."},
-  {id:"stepdown", name:"Goblet eccentric step-down", main:true, single:true, knee:true, how:"One stair. Lower the free heel to the floor in 3 s.", why:"Downhills are slow, controlled lowering. This is that, in the hall."},
-  {id:"calf", name:"Single-leg calf raise, straight knee", reps:"12 per leg", single:true, how:"Off a stair, bell in one hand, 2 s up, 3 s down.", why:"The calf and Achilles are your spring. Full range, slow lowering."},
-  {id:"copen", name:"Copenhagen plank", reps:"20 s per side", noKg:true, how:"Knee on a stair, lift hips.", why:"Inner-thigh strength keeps the pelvis level on rough ground."}
-];
-const LUNGE = {id:"lunge", name:"Goblet walking lunge", reps:"10 per leg", single:true, how:"Long controlled steps, left leg first.", why:"Long, controlled steps for downhill legs late in the race."};
-const B = [
-  {id:"footscrew", name:"Foot screws", reps:"20", noKg:true, cap:1, how:"Hold the railing. Big toe down, rise an inch, twist the heels in and out.", why:"The big toe anchors the foot. A grounded toe keeps the arch and knee from collapsing."},
-  {id:"stepup", name:"Goblet step-up, two stairs", main:true, single:true, knee:true, how:"Drive through the top foot, no push from the back leg.", why:"Climbing strength. Push only with the top leg."},
-  {id:"latlunge", name:"Goblet lateral lunge", reps:"6 per side", single:true, how:"Sit back into one hip, other leg straight.", why:"Trails move sideways too. Strength in the side-to-side plane."},
-  {id:"spanish", name:"Spanish squat (band)", reps:"30–45 s", noKg:true, how:"Band round the railing and behind both knees, sit back, shins vertical.", why:"Loads the knee with the shin vertical, a gentle way to strengthen it."},
-  {id:"tke", name:"Band knee extension, left", reps:"15", noKg:true, how:"Band behind the left knee, straighten fully, squeeze the thigh.", why:"Wakes up the left quad's last few degrees of straightening."},
-  {id:"bkcalf", name:"Bent-knee single-leg calf raise", reps:"15 per leg", single:true, how:"Knee bent about 30°, bell in one hand.", why:"Bent-knee raises reach the soleus, which takes most of the load in each stride."},
-  {id:"tib", name:"Tibialis raise", reps:"15", noKg:true, cap:2, how:"Back to the wall, heels 30 cm out, lift toes.", why:"Shin strength for steep descents and toe clearance on roots."},
-  {id:"tippy", name:"Tippy twist", reps:"8 per leg", noKg:true, cap:2, how:"Balance on one leg, hinge forward, rotate the hips down and up. Big toe stays down.", why:"Balance with the hip rotating over a steady foot, the way you land on uneven ground."},
-  {id:"carry", name:"Suitcase carry", reps:"30 s per side", sets:4, how:"Bell in one hand, stand tall, no lean. Rest 45 s.", why:"Stay tall while loaded on one side, like a pole plant or a stumble."}
-];
+// Exercise library. kg: logs a weight. swap: how the home version differs from the book.
+const EX = {
+  pigeon:{name:"Pigeon hip extension", how:"Pigeon pose with the back knee down. Squeeze the glute to lift that knee, then lower it slowly with the glute still on. The pelvis stays still."},
+  donkey:{name:"Donkey toes", how:"Tabletop on hands and toes, knees just off the floor. Lift one bent knee toward the ceiling without moving the back. Alternate."},
+  tippy:{name:"Tippy twist", how:"On one leg, big toe down. Hinge forward with the free leg back, rotate the hips down to the floor and up to the ceiling."},
+  frog:{name:"Frog bridge", how:"On your back, soles together, knees open, arms reaching up. Lift the hips high without arching the back."},
+  bear:{name:"Bear walk", how:"On hands and toes, back flat as a table. Step the opposite hand and foot together, forward, then back."},
+  hurdle:{name:"Lateral hurdle hop", how:"Hop sideways over a rolled towel, one foot to the other. Hips stay level."},
+  burpee:{name:"Burpees", how:"Down into a push-up, tuck the feet under, jump up reaching high."},
+  twisted:{name:"Twisted warrior", how:"Low lunge, hands inside the front foot. Twist the chest open and reach one arm up, then the other. Then switch legs."},
+  scoots:{name:"Butt scoots", how:"Sit tall, legs straight, arms forward. Walk on your sit bones by hiking and twisting one hip forward at a time, then go backward."},
+  rainbow:{name:"Glute rainbow", how:"On all fours, lift one bent leg level with your back, sole up. Rotate the foot in and out in an arc. Only the hip moves."},
+  hipcircle:{name:"Standing hip circles", how:"Knee up to hip height, turn the foot out behind you, push the leg straight back, return. Pelvis level."},
+  armcircle:{name:"Banded arm circles", how:"Band wide in both hands, arms straight. Take it overhead and behind you, then back to the front."},
+  pullapart:{name:"Pull-aparts", how:"Band at chest height, arms straight. Pull the ends apart, then return."},
+  longarm:{name:"Long-arm band squat", how:"Band tied to the railing at chest height, stand side-on and hold it with straight arms. Squat while resisting the twist."},
+  hiptwist:{name:"Banded hip twist", how:"Band tied at waist height and wrapped round your pelvis. On the far leg, rotate the pelvis in and out, hips level."},
+  drivethru:{name:"Band drive-thru", how:"Band tied low behind you, round the top of one thigh. Hinge back on that leg, then drive the hips through and the other knee forward."},
+  thread:{name:"Thread-the-needle plank", how:"Band tied low beside you. In a high plank, reach under your chest for it, then twist open and pull it out straight."},
+  footscrew:{name:"Foot screws", how:"Weight on the forefoot tripod, heels up an inch. Twist the heels in and out while the big toe stays pressed down."},
+  bball:{name:"Ball mobility", how:"Lean your mid back over a ball, hands behind the head. Roll from shoulder blades to bottom ribs, pausing on stiff spots. Not the low back."},
+  ohcarry:{name:"Overhead carry", kg:true, how:"Arms locked overhead, ribs down, walk.", swap:"Book: bar or broom with ankle weights. At home: the bell pressed overhead in one hand, switch halfway."},
+  chair:{name:"Chair-of-death squat", how:"Broom along your head, mid back and tailbone. Toes 5 cm from a chair. Squat back without losing the three contact points."},
+  sldowel:{name:"Single-leg deadlift with broom", how:"Broom along your back, hinge on one leg with the free leg back. Push the hips forward to stand."},
+  kbsquat:{name:"Kettlebell squat", kg:true, how:"Bell at your chest. Sit back and down until the elbows touch the thighs, spine neutral."},
+  slrdl:{name:"Single-leg deadlift", kg:true, how:"Bell in the hand opposite the standing leg. Hinge back with a straight spine, push the hips forward to stand.", swap:"Book: landmine bar."},
+  squat:{name:"Squat", kg:true, how:"Bell at your chest, 3 s down to a stair or chair, drive up.", swap:"Book: barbell back squat."},
+  swing:{name:"Kettlebell swing", kg:true, how:"Hinge, bell back between the legs, snap the hips so it floats to shoulder height. Glutes and hamstrings, not the low back."},
+  pushup:{name:"Push-ups", how:"Thumbs forward, body straight, chest down until the elbows reach the torso."},
+  carry:{name:"Suitcase carry", kg:true, how:"Bell in one hand, stand tall, no lean, 30 s. Switch sides. Rest 45 s."},
+  mbtwist:{name:"Ball twist", how:"On your back, knees bent. Rotate the weight from side to side with straight arms, head relaxed.", swap:"Book: 2–7 kg medicine ball. At home: a filled water bottle or small bag."},
+  sideplank:{name:"Side plank lifts", how:"On your elbow, shoulder blade down. Lift and lower the hips without twisting.", swap:"Book: a Swiss ball between the feet. At home: no ball."},
+  row:{name:"Band row", how:"Pull the hands to your chest, squeeze the shoulder blades, neck relaxed.", swap:"Book: suspension trainer. At home: band tied to the railing at chest height."},
+  splitsquat:{name:"Split squat", kg:true, how:"Rear foot on a stair, bell at your chest. Lower on the front leg with the trunk upright.", swap:"Book: a weight in each hand. At home: the one bell at your chest."},
+  hipthrust:{name:"Hip thrust", kg:true, how:"Bell on the hips on a folded towel. Drive the hips up to straight, no higher, spine neutral.", swap:"Book: loaded barbell. At home: shoulders on the bottom stair."},
+  archer:{name:"Archer press bridge", how:"Lean back holding the band in one hand, a water bottle in the other. Twist away like drawing a bow, then pull up while punching the bottle forward.", swap:"Book: suspension trainer. At home: band tied at chest height."},
+  waiter:{name:"Waiter carry", how:"Upper arm level, forearm vertical, ribs down. Walk 30 s.", swap:"Book: 2–7 kg. At home: a filled water jug, not the 14 kg bell."},
+  rdl:{name:"Romanian deadlift", kg:true, how:"Bell in both hands. Push the hips back with the bell close to the legs, 3 s down, then drive the hips forward.", swap:"Book: barbell."},
+  splitbox:{name:"Split jump onto a stair", how:"One foot on a stair, jump and switch legs in the air, rebound at once. No double bounce."},
+  slpress:{name:"Single-leg shoulder press", how:"On one leg, big toe down. Press a water bottle overhead with the opposite hand."},
+  farmer:{name:"Farmer carry", kg:true, how:"Shoulders down, neck long, normal steps, 40 s.", swap:"Book: a weight in each hand. At home: one bell, switch hands each walk."},
+  reachout:{name:"Kneeling reach-out", how:"Kneel with hands on a towel on a smooth floor. Slide it forward as far as you can without the low back arching, then back.", swap:"Book: suspension trainer."},
+  boxjump:{name:"Seated jump to a stair", how:"Sit on a low chair facing the stairs. Explode up and forward onto the first or second stair, land tall.", swap:"Book: two boxes."},
+  curls:{name:"Hamstring curl on a towel", how:"Heels on a towel on a smooth floor, hips up in a bridge. Pull the heels in and push them out without dropping the hips.", swap:"Book: Swiss ball."},
+  tucktwist:{name:"Plank tuck twist", how:"High plank with feet on a towel on a smooth floor. Tuck the knees under and twist side to side. 30 s on, 30 s off.", swap:"Book: shins on a Swiss ball."},
+  pushpress:{name:"Kettlebell push press", kg:true, how:"Split stance, bell at the shoulder. Dip and jump so the drive sends the bell overhead, switching feet in the air. Light and fast.", swap:"Book: dumbbells. At home: one bell, switch hands each set."},
+  kbdl:{name:"Kneeling banded deadlift", how:"Band tied low behind you, round your waist. Kneeling, let it pull the hips back to the heels, then drive them forward. No arching."},
+  pry:{name:"Prying goblet squat", kg:true, how:"Barefoot, bell by the horns. Sit back and down between the knees, heels down, elbows inside the knees. Pry the knees apart and breathe for a few breaths at the bottom."},
+  bridge:{name:"Hip bridge", how:"On your back, a shoe squeezed between the knees. Lift the hips as high as you can and hold 3 s, still pushing higher. Down, short rest."},
+  halo:{name:"Halo", kg:true, how:"Bell upside down by the horns, knees locked, glutes and abs tight. Circle it slowly round your head, shoulders down. Both directions."},
+  ssswing:{name:"Swings", kg:true, how:"Explosive hip snap, bell to chest height. Start the next set only when you can talk in short sentences again. One-arm sets alternate hands; every second or third session, do two-arm swings instead. While you learn, two-arm only."},
+  getup:{name:"Get-ups", kg:true, how:"One slow, clean rep at a time, alternating sides. If it gets shaky, stop at the stage you still control."},
+  ninety:{name:"90/90 stretch", how:"Sit with the front leg bent 90° in front and the back leg 90° to the side. Chest proud, hinge forward from the hips over the front knee. Breathe and relax. Both sides."},
+  qlstraddle:{name:"QL straddle", how:"Sit in a straddle, reach one arm overhead and lean the other way along the floor to stretch the side of your back. Both sides."},
+  backlunge:{name:"Rear-foot lunge", how:"Back foot on a stair behind you. Drop into a lunge with the front shin vertical, then stand."}
+};
+// [id, sets, reps] or [id, sets, reps, note]. A workout has items, or pre / rounds+circuit / post.
+const WORKOUTS = {
+  P1:{name:"Core circuit", kind:"precision", num:1, min:"15–20 min", rounds:3, circuit:[["pigeon",3,"10 per side"],["donkey",3,"20 per leg"],["tippy",3,"8 per side"],["frog",3,"20"],["bear",3,"20 steps each way"],["hurdle",3,"20 hops"],["burpee",3,"10"]]},
+  P2:{name:"Hip circuit", kind:"precision", num:2, min:"15–20 min", rounds:2, circuit:[["twisted",2,"10 per leg"],["scoots",2,"20 per side"],["pigeon",2,"10 per side"],["rainbow",2,"10 per side"],["hipcircle",2,"5 per side"],["tippy",2,"8 per side"],["burpee",2,"10"],["frog",2,"25"],["hurdle",2,"20 hops"]]},
+  P3:{name:"Band circuit", kind:"precision", num:3, min:"15–20 min", rounds:2, pre:[["armcircle",1,"20"],["pullapart",1,"20"]], circuit:[["longarm",2,"10 per side"],["hiptwist",2,"20 per side"],["bear",2,"30 steps each way"],["drivethru",2,"10 per side"],["thread",2,"20 per side"]], post:[["footscrew",1,"30"],["armcircle",1,"20","2"],["pullapart",1,"20","2"]]},
+  W7:{name:"Performance prep", kind:"performance", num:7, min:"45 min", items:[["bball",1,"2 min"],["armcircle",1,"20"],["pullapart",1,"20"],["ohcarry",1,"1 min"],["bear",1,"30 steps each way"],["chair",1,"25"],["sldowel",1,"25 per side"],["kbsquat",1,"20"],["slrdl",3,"8 per side"],["squat",3,"8"],["swing",3,"12"],["pushup",3,"10"],["carry",4,"30 s per side"],["footscrew",1,"30"],["twisted",1,"10 per leg"]]},
+  W8:{name:"Single-leg focus", kind:"performance", num:8, min:"45 min", items:[["mbtwist",1,"80"],["sideplank",1,"25 per side"],["longarm",1,"20 per side"],["donkey",1,"2 min"],["row",2,"10"],["slrdl",3,"8 per side"],["splitsquat",3,"8 per side"],["swing",3,"12"],["hipthrust",3,"8"],["archer",2,"8 per side"],["waiter",2,"30 s per side"]]},
+  W9:{name:"Horizontal force", kind:"performance", num:9, min:"45 min", items:[["longarm",1,"20 per side"],["thread",1,"20 per side"],["rdl",3,"8"],["splitbox",1,"10 per leg"],["swing",3,"8"],["archer",2,"8 per side"],["slpress",2,"8 per side"],["farmer",3,"40 s"],["hipthrust",3,"8"]]},
+  W10:{name:"Vertical force", kind:"performance", num:10, min:"45 min", items:[["mbtwist",1,"80"],["kbsquat",1,"12"],["reachout",1,"20"],["bear",1,"30 steps each way"],["splitsquat",1,"10 per leg"],["squat",3,"8"],["row",2,"12"],["burpee",1,"8"],["slrdl",2,"8 per side"],["boxjump",3,"5"],["carry",4,"30 s per side"],["curls",3,"10"]]},
+  SS:{name:"Simple & Sinister", kind:"ss", num:"S&S", min:"about 30 min", rounds:3, labels:{circuit:"Warm-up, 3 times through", main:"Swings, then get-ups", post:"Stretches, now or before bed"}, circuit:[["pry",3,"a few breaths at the bottom"],["bridge",3,"5, with 3 s holds"],["halo",3,"5 each way"]], main:[["ssswing",10,"10"],["getup",10,"1, switch sides each rep"]], post:[["ninety",1,"1–3 sets per side"],["qlstraddle",1,"1–3 sets per side"]]},
+  W13:{name:"Power A", kind:"power", num:13, min:"45 min", items:[["longarm",1,"20 per side"],["tucktwist",3,"30 s"],["boxjump",3,"4"],["splitbox",1,"5 per side"],["rdl",3,"5"],["pushpress",3,"4 per leg"],["hipthrust",3,"6"],["pushup",3,"6"],["twisted",1,"10 per leg"]]},
+  W14:{name:"Power B", kind:"power", num:14, min:"45 min", items:[["scoots",3,"10"],["rainbow",1,"5 per side"],["hipcircle",1,"5 per side"],["kbdl",1,"30"],["drivethru",1,"8 per side"],["pushpress",3,"5 per leg"],["squat",5,"5, light and fast","Complex: 5 fast squats, rest 30 s, then the jumps below. 5 rounds."],["boxjump",5,"3","Rest 90 s after the jumps, then back to the squats."],["swing",3,"6"],["burpee",1,"6"],["backlunge",1,"8 per leg"]]}
+};
+const KIND_LABEL = {precision:"Precision workout", performance:"Performance workout", power:"Power workout", ss:"Kettlebell practice"};
+const WORKOUT_ORDER = ["P1","P2","P3","SS","W13","W14"];
 // Demo videos (YouTube, checked embeddable 23 Nov 2026). Loaded only when tapped, via youtube-nocookie.
 const DEMOS = {"rfess": {"id": "iANV_6_2N_o", "by": "Horton Barbell"}, "slrdl": {"id": "9inxLLbsQPw", "by": "Zehring Physical Therapy"}, "swing": {"id": "yeB_J0rqc5Q", "by": "Cavemantraining"}, "hipthrust": {"id": "D2nNU3FonZE", "by": "Rehab My Patient"}, "stepdown": {"id": "Ig_Qo-GKjRc", "by": "MyPhysioSays"}, "calf": {"id": "3g5Mb3Y9sFU", "by": "Perfect Balance Clinic"}, "copen": {"id": "nhGK-DxiGBE", "by": "Physio Plus Fitness"}, "stepup": {"id": "W_iyzcfJbOk", "by": "The Fitness Academy"}, "latlunge": {"id": "AotXnGBys6o", "by": "Rehab My Patient"}, "spanish": {"id": "-ksofnvkohI", "by": "Michael Braccio"}, "tke": {"id": "siJKZ-c_P44", "by": "Balance In Motion"}, "bkcalf": {"id": "-XeTMSjpkCE", "by": "Mathew Hawkes"}, "tib": {"id": "lBCRdjdWiTI", "by": "Balance In Motion"}, "carry": {"id": "Q1GjhRDAil0", "by": "Rehab My Patient"}, "pogo": {"id": "hjprPAnfqoQ", "by": "Drs. Mike & Kelly Swann"}, "splitjump": {"id": "m0IrF39BxI0", "by": "SKLZ"}, "stairbound": {"id": "swKfVF81dmY", "by": "Stronger Runner"}, "lunge": {"id": "oV97EckMQlo", "by": "OPEX Fitness"}};
 const PRINCIPLES = [
-  ["Precision before load","Learn to move well with bodyweight and bands first, then add weight. That's why Trail Prep comes before your runs."],
-  ["Repeat, but vary","The same moves often, in rotating versions. Your body learns from both, so Trail Prep alternates between two circuits."],
+  ["Precision before load","Learn to move well with bodyweight and bands first, then add weight. Precision workouts work best just before a run."],
+  ["Repeat, but vary","The same moves often, in rotating versions. Your body learns from both, so the precision workouts rotate through three circuits."],
   ["Keep hard days apart","Hard runs and hard lifting go at least 48 hours apart. Easy running on sore legs is fine."],
-  ["Three weeks on, one lighter","Strength builds while you recover, so every fourth week drops the heavy sessions."],
+  ["Three weeks on, one lighter","Strength builds while you recover, so every fourth week drops the performance workout and keeps precision."],
   ["Power near the race","Fast, light, explosive work belongs in the last 6 weeks before a key race."],
-  ["The big toe anchors the foot","Press the big toe down and turn the hip slightly out. The knee then stays over the foot, which matters for your left knee."],
+  ["The big toe anchors the foot","Press the big toe down and turn the hip slightly out. The knee then stays over the foot."],
   ["Build a bigger spring","Running is bouncing. Stiff ankles and short ground contact return energy instead of wasting it."],
   ["Hips drive, the back stays still","Hinge from the hips with a neutral spine in swings, deadlifts and hip thrusts."],
-  ["Base strength first","Newer lifters need about three months of basic strength before combining heavy lifts and jumps."]
+  ["Base strength first","Newer lifters rotate Workouts 7–10 for about three months before the power workouts."]
 ];
 // Race-week checklists. Ticks are saved in the log as logs["race-divca"] / logs["race-jablanik"].
 const RACE_WEEKS = [
   {id:"divca", race:0, start:new Date(2027,2,1), intro:"15 km, 640 m+, in winter. Short and steep: grip and warmth matter more than food.", days:[
-    {t:"Mon 1 Mar", items:[["d1-b","Last strength session: Session B, light, 2 sets"],["d1-kit","Read the race's mandatory kit list on the official site"],["d1-start","Note start time, bib pickup and travel to Divčibare"]]},
-    {t:"Tue 2 Mar", items:[["d2-prep","Trail Prep 1, then 30 min easy with 4 × 20 s relaxed strides. No speed session"],["d2-shoes","Run in your race shoes and socks to check them"]]},
+    {t:"Mon 1 Mar", items:[["d1-b","Precision workout only. No performance workout this week"],["d1-kit","Read the race's mandatory kit list on the official site"],["d1-start","Note start time, bib pickup and travel to Divčibare"]]},
+    {t:"Tue 2 Mar", items:[["d2-prep","30 min easy with 4 × 20 s relaxed strides. No speed session"],["d2-shoes","Run in your race shoes and socks to check them"]]},
     {t:"Wed 3 Mar", items:[["d3-run","Easy 30 min or rest. No lifting"],["d3-grip","Decide on grip: lugged shoes, and microspikes if the course is icy"],["d3-layers","Lay out layers: hat, gloves, buff, waterproof jacket"]]},
     {t:"Thu 4 Mar", items:[["d4-rest","Rest or 20 min easy"],["d4-course","Study the 15 km profile: where the climbs are, where to hike, which descents may be icy"],["d4-weather","Check the forecast for Divčibare and plan layers for it"]]},
     {t:"Fri 5 Mar", items:[["d5-run","20 min easy with a few strides"],["d5-food","Normal meals with a bit more carbohydrate. No new foods"],["d5-sleep","8 hours of sleep. Friday night counts more than Saturday"]]},
@@ -370,8 +423,8 @@ const RACE_WEEKS = [
     {t:"Sun 7 Mar · Race", items:[["d7-bfast","Familiar breakfast 2–3 hours before the start"],["d7-warm","Warm up 10 min easy plus leg swings. Stay warm until the start"],["d7-pace","Start steady on the first climb, hike the steep parts"],["d7-after","Dry clothes and a warm drink straight after"]]}
   ]},
   {id:"jablanik", race:1, start:new Date(2027,3,19), intro:"34 km, 1800 m+. Long: fuelling, pacing and downhill legs decide it.", days:[
-    {t:"Mon 19 Apr", items:[["j1-b","Last strength session: Session B, light, 2 sets"],["j1-kit","Read the race's mandatory kit list on the official site and check every item"],["j1-start","Note start time, bib pickup, cut-off times and travel"]]},
-    {t:"Tue 20 Apr", items:[["j2-prep","Trail Prep 1, then 40 min easy with 4 × 20 s strides. No speed session"],["j2-pack","Run with the full race vest loaded, to check it doesn't bounce or rub"]]},
+    {t:"Mon 19 Apr", items:[["j1-b","Last session: Power A at half volume. Nothing after it"],["j1-kit","Read the race's mandatory kit list on the official site and check every item"],["j1-start","Note start time, bib pickup, cut-off times and travel"]]},
+    {t:"Tue 20 Apr", items:[["j2-prep","40 min easy with 4 × 20 s strides. No speed session"],["j2-pack","Run with the full race vest loaded, to check it doesn't bounce or rub"]]},
     {t:"Wed 21 Apr", items:[["j3-run","Easy 30–40 min. No lifting"],["j3-shoes","Shoes and socks you've already done a 3-hour run in"],["j3-poles","Decide on poles, if allowed, and practise folding them"]]},
     {t:"Thu 22 Apr", items:[["j4-rest","Rest or 20 min easy"],["j4-course","Study the 34 km profile and aid stations. Mark the long climbs to hike"],["j4-fuel","Plan fuel: about 60 g carbohydrate an hour from the first hour, and what you'll take at each aid station. Start the carb build today"]]},
     {t:"Fri 23 Apr", items:[["j5-run","20 min easy with a few strides"],["j5-carbs","Carbohydrate at every meal, about 610 g a day (7 g per kg). Nothing new"],["j5-sleep","8 hours of sleep. Friday night counts more than Saturday"],["j5-weather","Check the forecast and pack for rain and cold on the tops"]]},
@@ -426,8 +479,10 @@ function fuelTip(d){
     return "Long run. Over about 75 minutes, start a gel or sports drink at 40–45 minutes, 30–60 g an hour. Shorter or easy: water is enough. Drink by thirst.";
   }
   if(dow===2||dow===5) return rw ? "Easy run day. Normal carb-centred meals, water on the run." : "Speed day. A carb-centred meal 2–3 hours before. Under an hour of running: water is enough. Longer and hard: a sports drink or gel during.";
-  if(dow===1||dow===3) return (p && p.noLift) ? "Recovery week. Keep eating to hunger. This is when training turns into fitness." : "Lifting day. Normal carb-centred meals, water during the session. No sports drink needed.";
-  if(dow===6) return "Rest day. A carb-centred dinner sets up tomorrow's long run.";
+  if(dow===1||dow===3){ const sess = autoSession(d);
+    if(!sess) return "Light day. Keep eating to hunger. Recovery is when training turns into fitness.";
+    return sess[0]==="P" ? "Precision day. Normal carb-centred meals. Nothing special needed for a 20-minute circuit." : "Lifting day. Normal carb-centred meals, water during the session. No sports drink needed."; }
+  if(dow===6) return autoSession(d) ? "S&S day. A carb-centred dinner sets up tomorrow's long run." : "Rest day. A carb-centred dinner sets up tomorrow's long run.";
   return "Rest day. Still eat to hunger. Rest days rebuild what training used.";
 }
 let foodSaveTimer=null;
@@ -488,11 +543,6 @@ function renderRaceCheck(rw, openDay){
   });
   return frag;
 }
-// Trail Prep: Running Rewired-style precision circuits, 15 min before Tuesday and Friday runs. Not logged.
-const PREP = {
-  1: {title:"Trail Prep 1: feet and hips", items:["Foot screws × 20","Tippy twist × 8 per leg","Pigeon hip extension × 15 per side","Frog bridge × 25, soles together","Donkey toes, 4 × 30 s","Lateral hop over a rolled towel, 20 s"]},
-  2: {title:"Trail Prep 2: bands", items:["Long-arm band squat × 10 per side","Band drive-thru × 10 per leg","Banded hip drag × 15 per leg","Bear walk, 20 steps forward and back","Twisted warrior × 5 per side, per leg","Foot screws × 30"]}
-};
 const KNEE_DATES = ["2026-11-23","2026-12-21","2027-01-18","2027-02-15"];
 
 const pad = n => String(n).padStart(2,"0");
@@ -508,28 +558,16 @@ function weekStart(w){ return new Date(START.getTime()+(w-1)*7*dayMs); }
 function firstNum(s){ const m = String(s||"").match(/\d+(\.\d+)?/); return m ? m[0] : ""; }
 
 function prescription(session, w){
-  const p = phaseOf(w); if(!p) return null;
-  let sets = p.sets; if(w===14) sets = 2;
+  const wk = WORKOUTS[session]; if(!wk) return null;
+  const p = phaseOf(w); const half = !!(p && p.half && (wk.kind==="power"||wk.kind==="performance"));
+  const mk = (it, part)=>{ const [id, sets, reps, note] = it; const e = EX[id];
+    const isNote = note && note.length>2; const sfx = (!isNote && note) ? note : "";
+    const n = half ? Math.max(1, Math.ceil(sets/2)) : sets;
+    return {...e, id:id+sfx, base:id, sets:n, reps, noKg:!e.kg, part, note:isNote?note:""}; };
   let list = [];
-  if(session==="A"){
-    if(p.power && w!==14) list = list.concat(POWER.map(x=>({...x})));
-    A.forEach(x=>{
-      let s = x.main ? sets : (x.sets ? (sets<3 ? 2 : x.sets) : Math.min(sets, x.cap||3));
-      let reps = x.reps || p.reps;
-      if(p.jablanik && x.id==="stepdown" && sets>=3){ s = 4; reps = "8"; }
-      list.push({...x, sets:s, reps: x.main ? reps+(x.single?" per leg":"") : reps});
-    });
-    if(p.jablanik) list.push({...LUNGE, sets:3});
-  } else {
-    B.forEach(x=>{
-      let s = x.main ? sets : (x.sets ? (sets<3 ? 2 : x.sets) : Math.min(sets, x.cap||3));
-      let reps = x.reps || p.reps;
-      if(p.power && x.id==="stepup"){ reps = "6"; }
-      list.push({...x, sets:s, reps: x.main ? reps+(x.single?" per leg":"") : reps,
-        how: (p.power && x.id==="stepup") ? "Fast step-ups: explosive up, slow down." : x.how});
-    });
-  }
-  return {phase:p, sets, list};
+  if(wk.items) list = wk.items.map(it=>mk(it,"main"));
+  else list = [...(wk.pre||[]).map(it=>mk(it,"pre")), ...wk.circuit.map(it=>mk(it,"circuit")), ...(wk.main||[]).map(it=>mk(it,"main")), ...(wk.post||[]).map(it=>mk(it,"post"))];
+  return {workout:wk, half, list};
 }
 
 // ---------- storage (format unchanged: tsl-logs / tsl-knee, {logs, knee} on goblin) ----------
@@ -604,17 +642,21 @@ function saveKnee(){
 // ---------- UI state ----------
 let view = "today";
 let selDate = new Date(today);
-let selSession = null; // "A" | "B" | null (auto)
+let selSession = null; // workout id (P1..W14) or null for the day's plan
 let draft = null; // {key, ex:{id:{kg:[],reps:[],done:[]}}, note}
 
+const RECOVERY = [4,8,12,16,20];
 function autoSession(d){
-  const dow = d.getDay(), p = phaseOf(weekOf(d));
-  if(p && p.noLift) return null;
-  if(p && p.onlyA && dow===1) return null;
-  if(p && p.onlyB && dow===3) return null;
-  return dow===1?"B":dow===3?"A":null;
+  const dow = d.getDay(), w = weekOf(d), p = phaseOf(w); if(!p) return null;
+  if(dow===1){ if(p.kind==="race" && p.half) return "W13"; return "P"+(((w-1)%3)+1); }
+  if(dow===3){
+    if(p.kind==="build" || p.kind==="rec") return "SS";
+    if(p.kind==="power") return ({17:"W13",18:"W14",19:"W13",21:"W14"})[w] || "W13";
+    return null;
+  }
+  if(dow===6 && (p.kind==="build" || p.kind==="power")) return "SS";
+  return null;
 }
-function prepList(n){ const pr = PREP[n]; return `<div style="width:100%;display:flex;flex-direction:column;gap:8px;text-align:left"><div class="eyebrow">${pr.title} · 2 rounds, 15 min</div><ul>${pr.items.map(i=>`<li>${i}</li>`).join("")}</ul></div>`; }
 function lastFor(exId, beforeKey){
   const keys = Object.keys(logs).filter(k=>k<beforeKey).sort().reverse();
   for(const k of keys){ const e = logs[k].ex && logs[k].ex[exId]; if(e && (e.kg||[]).some(v=>v!==""&&v!=null)){ return {key:k, e}; } }
@@ -665,10 +707,13 @@ function renderToday(){
       <div class="mid"><span class="eyebrow">${isToday?"Today":"Week "+w}</span><h2>${fmt(selDate)}</h2>
         ${isToday?"":`<button class="linkbtn" id="goToday">Back to today</button>`}</div>
       <button class="iconbtn" id="nextDay" aria-label="Next day">${ico("right")}</button></div>
-    <div class="seg" role="group" aria-label="Which session">
+    <div class="seg pick" role="group" aria-label="Which workout">
       <button id="segAuto" aria-pressed="${!selSession}">Day's plan</button>
-      <button id="segA" aria-pressed="${selSession==="A"}">Session A</button>
-      <button id="segB" aria-pressed="${selSession==="B"}">Session B</button></div></div>`);
+      <label class="pickwrap" aria-pressed="${!!selSession}"><span class="sr">Other workout</span><select id="segPick">
+        <option value="">Other workout…</option>
+        ${WORKOUT_ORDER.map(id=>`<option value="${id}" ${selSession===id?"selected":""}>${WORKOUTS[id].kind==="ss"?"":WORKOUTS[id].num+". "}${WORKOUTS[id].name}</option>`).join("")}
+        ${selSession && !WORKOUTS[selSession] ? `<option value="${esc(selSession)}" selected>Session ${esc(selSession)} (old plan)</option>` : ""}
+      </select></label></div></div>`);
   v.appendChild(top);
   const go = fn => ()=>{ if(!okToLeave()) return; fn(); draft=null; render(); };
   const shiftDay = n => { selDate=new Date(selDate.getTime()+n*dayMs); selDate.setHours(0,0,0,0); selSession=null; };
@@ -676,8 +721,8 @@ function renderToday(){
   v.querySelector("#nextDay").onclick=go(()=>shiftDay(1));
   const gt = v.querySelector("#goToday"); if(gt) gt.onclick=go(()=>{ selDate=new Date(today); selSession=null; });
   v.querySelector("#segAuto").onclick=go(()=>{ selSession=null; });
-  v.querySelector("#segA").onclick=go(()=>{ selSession="A"; });
-  v.querySelector("#segB").onclick=go(()=>{ selSession="B"; });
+  const pick = v.querySelector("#segPick");
+  pick.onchange=()=>{ const val = pick.value; if(!okToLeave()){ pick.value = selSession||""; return; } selSession = val||null; draft=null; render(); };
 
   const rwk = raceWeekFor(selDate);
   if(rwk) v.appendChild(renderRaceCheck(rwk, Math.round((selDate-rwk.start)/dayMs)));
@@ -685,62 +730,64 @@ function renderToday(){
 
   if(!session){
     const isRaceDay = RACES.some(r=>iso(r.date)===iso(selDate));
-    const what = (rwk && (dow===2||dow===5)) ? {i:"run", t:"Trail Prep, then easy run", d:"Race week: easy running only, with a few relaxed strides."}
-      : dow===2||dow===5 ? {i:"run", t:"Trail Prep, then speed run", d:"Do the 15-minute circuit below as your warm-up, then run."}
-      : (p.noLift && (dow===1||dow===3)) ? {i:"moon", t:"Recovery week", d:"No lifting this week. Trail Prep 1 is fine if you want to move."}
+    const what = (rwk && (dow===2||dow===5)) ? {i:"run", t:"Easy run", d:"Race week: easy running only, with a few relaxed strides."}
+      : dow===2||dow===5 ? {i:"run", t:"Speed run", d:"Your key run. Arrive rested: no lifting the day before."}
+      : (p.kind==="rec" && dow===3) ? {i:"moon", t:"Recovery week", d:"No performance workout this week. The book's rule: every fourth week, precision only."}
+      : (p.kind==="race" && (dow===1||dow===3)) ? {i:"moon", t:"Race week", d:"Nothing more this week. Fresh legs for Sunday."}
       : dow===0 ? {i: isRaceDay?"flag":"run", t: isRaceDay?"Race day":"Long run", d: (isRaceDay ? "Race day. Good luck." : "The key run of the week. Hike the steep climbs.")}
-      : dow===4 ? {i:"moon", t:"Rest or ankle routine", d:"10 minutes, optional."}
-      : {i:"moon", t:"Rest", d:"Easy walk and mobility. Fresh legs for Sunday."};
+      : {i:"moon", t:"Rest", d:"Easy walk and mobility."};
     v.appendChild(el(`<div class="card restday"><div class="big">${ico(what.i)}</div><h2>${what.t}</h2><p class="muted">${what.d}</p>
-      ${dow===4||dow===6?`<div style="width:100%;display:flex;flex-direction:column;gap:8px"><div class="eyebrow">Ankle routine</div><ul><li>20 calf raises</li><li>20 tibialis raises</li><li>30 s single-leg balance per leg, eyes closed</li>${w>=10?"<li>20 pogo hops</li>":""}</ul></div>`:""}
-      ${dow===2?prepList(1):dow===5?prepList(2):(p.noLift && (dow===1||dow===3))?prepList(1):""}
-      <p class="note">Want to lift anyway? Pick Session A or B above.</p></div>`));
+      <p class="note">Want a workout anyway? Pick one above.</p></div>`));
     v.appendChild(fuelCard(selDate));
     return;
   }
 
-  const rx = p.noLift ? prescription(session, 1) : prescription(session, w);
+  const rx = prescription(session, w);
+  if(!rx){ v.appendChild(el(`<div class="card"><p>This session is from the old plan. Its log is kept in History, but the old workouts are no longer in the app.</p></div>`)); return; }
+  const wk = rx.workout;
   const key = iso(selDate)+"_"+session;
   if(!draft || draft.key!==key){
     const saved = logs[key];
     draft = saved ? JSON.parse(JSON.stringify(saved)) : {key, date:iso(selDate), session, week:w, phase:p.name, ex:{}, note:""};
     draft.key = key;
   }
-  const total = rx.list.reduce((a,x)=>a+x.sets+(x.knee?1:0),0);
+  const total = rx.list.reduce((a,x)=>a+x.sets,0);
 
-  const head = el(`<div class="sesshead"><div class="line"><h2>Session ${session} <span class="muted" style="font-weight:600;font-size:17px">${session==="A"?"Strength":"Single-leg, ankles, knee"}</span></h2>
+  const head = el(`<div class="sesshead"><div class="line"><h2>${esc(wk.name)} <span class="muted" style="font-weight:600;font-size:17px">${KIND_LABEL[wk.kind]}${wk.kind==="ss"?"":" "+wk.num}</span></h2>
       <span class="count num" id="progCount" aria-live="polite"></span></div>
     <div class="bar" role="progressbar" aria-label="Sets done" aria-valuemin="0" aria-valuemax="${total}" id="progBar"><span></span></div></div>`);
   v.appendChild(head);
-  if((p.onlyB && session==="A") || (p.onlyA && session==="B") || p.noLift){
-    const msg = p.noLift ? "no lifting this week, Trail Prep only" : p.onlyB ? "the plan has Session B only this week" : "the plan has Session A only this week";
-    v.appendChild(el(`<div class="callout">${ico("alert")}<span>${p.name}: ${msg}.</span></div>`));
-  }
-  v.appendChild(el(`<details class="prep"><summary><span class="row" style="gap:10px">${ico("warm")}<span>Before you start <span class="note" style="display:block;font-weight:500">Warm-up 8 min · left leg first</span></span></span>${ico("right","chev")}</summary>
-    <div class="body"><p class="note">${p.note} Target effort RPE ${p.rpe}.</p>
-      <p><b>Warm-up, 8 min:</b> easy skipping, 10 leg swings each way, 10 glute bridges, 20 small ankle hops.</p>
-      <div class="callout">${ico("info")}<span>Left leg first on every single-leg move. Knee moves get one extra set on the left, marked <span class="side">L</span>.</span></div>
-      <p class="note">Knee cue: keep the big toe pressed down and turn the hip slightly out, as if screwing the foot into the floor. The knee stays over the second toe.</p></div></details>`));
+  if(rx.half) v.appendChild(el(`<div class="callout">${ico("alert")}<span>${p.name}: half volume, the book's taper for the last 11–14 days before a peak race. Keep the speed.</span></div>`));
+  v.appendChild(el(`<details class="prep"><summary><span class="row" style="gap:10px">${ico("warm")}<span>How to do it <span class="note" style="display:block;font-weight:500">${wk.min}${wk.rounds?` · ${wk.rounds} rounds`:""}</span></span></span>${ico("right","chev")}</summary>
+    <div class="body">${wk.kind==="ss"
+      ? `<p>From Pavel Tsatsouline's <i>Kettlebell Simple & Sinister</i>. Practice, not a workout: every swing explosive, every get-up clean.</p><p>Rest between sets until you can speak in short sentences. Same sets and reps every time; progress only by weight, when it feels easy.</p><p class="note">The book starts men on 16 kg for get-ups and 24 kg for swings. Learn on 14 kg, then go heavier.</p>`
+      : wk.kind==="precision"
+      ? `<p>Practice, not a workout: slow, precise moves through the full range. Rest 30–45 s between exercises.</p>${wk.rounds?`<p>Go through the round list ${wk.rounds} times and tick each exercise once per round.${wk.pre?" Do the start and finish moves once.":""}</p>`:""}<p class="note">Best done just before a run, as a warm-up.</p>`
+      : `<p>Go as heavy as you can with perfect form. If your form slips, drop the weight. With 14 kg, slow the lowering to 3–4 s instead.</p><p>Rest about 90 s between the main sets. If a move is new, do fewer sets the first time.</p><p class="note">Keep your hard runs 48 hours away from this workout. Easy running on sore legs is fine.</p>`}</div></details>`));
 
   const list = document.createElement("div"); list.style.cssText="display:flex;flex-direction:column;gap:12px";
   v.appendChild(list);
 
   function updateProgress(){
-    let done=0; rx.list.forEach(x=>{ const n=x.sets+(x.knee?1:0); const d=(draft.ex[x.id]||{}).done||[]; for(let i=0;i<n;i++) if(d[i]) done++; });
+    let done=0; rx.list.forEach(x=>{ const n=x.sets; const d=(draft.ex[x.id]||{}).done||[]; for(let i=0;i<n;i++) if(d[i]) done++; });
     v.querySelector("#progCount").textContent = done+" / "+total+" sets";
     const bar = v.querySelector("#progBar"); bar.setAttribute("aria-valuenow", done); bar.firstElementChild.style.width = (total?done/total*100:0)+"%";
   }
 
+  let lastPart = null;
   rx.list.forEach(x=>{
-    const extra = x.knee ? 1 : 0;
-    const n = x.sets + extra;
+    if(wk.rounds && x.part!==lastPart){ lastPart = x.part; list.appendChild(el(`<div class="eyebrow" style="margin-top:4px">${(wk.labels&&wk.labels[x.part]) || (x.part==="pre"?"Start, once":x.part==="post"?"Finish, once":`Rounds: ${wk.rounds} times through`)}</div>`)); }
+    const extra = 0;
+    const n = x.sets;
     const e = draft.ex[x.id] || (draft.ex[x.id] = {name:x.name, kg:[], reps:[], done:[]});
-    const prev = lastFor(x.id, key);
+    const prev = x.noKg ? null : lastFor(x.base, key);
+    const unit = x.part==="circuit" ? "Round" : "Set";
+    const dm = DEMOS[x.base] || DEMOS[({splitsquat:"rfess", splitbox:"splitjump"})[x.base]];
     const prevKg = prev ? prev.e.kg : [];
     const repTarget = firstNum(x.reps);
     let prevTxt = "";
     if(prev){ const kgs = prev.e.kg.filter(v=>v!==""&&v!=null); prevTxt = `Last time, ${fmt(new Date(prev.key.slice(0,10)+"T00:00:00"))}: <span class="num">${kgs.join(" / ")} kg</span>`; }
-    let rows = `<span class="lab">Set</span><span class="lab">${x.noKg?"":"kg"}</span><span class="lab">Reps / time</span><span class="lab" style="text-align:center">Done</span>`;
+    let rows = `<span class="lab">${unit}</span><span class="lab">${x.noKg?"":"kg"}</span><span class="lab">Reps / time</span><span class="lab" style="text-align:center">Done</span>`;
     for(let i=0;i<n;i++){
       const isExtra = extra && i===n-1;
       const ownAbove = e.kg.slice(0,i).filter(v=>v!==""&&v!=null).pop();
@@ -748,10 +795,10 @@ function renderToday(){
       rows += `<span class="setno num">${i+1}${isExtra?' <span class="side">L</span>':""}</span>
         ${x.noKg?'<span class="nokg" aria-hidden="true">–</span>':`<input type="number" inputmode="decimal" step="0.5" min="0" id="kg-${x.id}-${i}" value="${esc(e.kg[i]??"")}" placeholder="${esc(kgPh)}" aria-label="Set ${i+1} kilograms">`}
         <input type="number" inputmode="numeric" min="0" id="reps-${x.id}-${i}" value="${esc(e.reps[i]??"")}" placeholder="${esc(repTarget)}" aria-label="Set ${i+1} reps or seconds">
-        <button class="chk" id="done-${x.id}-${i}" aria-pressed="${!!e.done[i]}" aria-label="Set ${i+1} done">${ico("check")}</button>`;
+        <button class="chk" id="done-${x.id}-${i}" aria-pressed="${!!e.done[i]}" aria-label="${unit} ${i+1} done">${ico("check")}</button>`;
     }
-    const block = el(`<details class="ex" id="ex-${x.id}"><summary><span class="exmeta"><h3>${x.name}</h3><span class="exsub"><span class="rx num">${x.sets}${extra?"+1L":""} × ${x.reps}</span><span class="exdone num" data-exdone>${ico("check")}<span></span></span></span></span>${ico("right","chev")}</summary><div class="body">
-      <p class="how">${x.how}</p>${DEMOS[x.id]?`<div class="demo" data-demo="${DEMOS[x.id].id}"><button class="ghost demobtn" type="button">${ico("right","sm")}Watch demo <span class="note">· ${esc(DEMOS[x.id].by)}</span></button></div>`:""}${x.why?`<p class="why">${ico("info","sm")}<span>${x.why}</span></p>`:""}${prevTxt?`<p class="last">${ico("history","sm")}<span>${prevTxt}</span></p>`:""}<div class="sets">${rows}</div></div></details>`);
+    const block = el(`<details class="ex" id="ex-${x.id}"><summary><span class="exmeta"><h3>${x.name}</h3><span class="exsub"><span class="rx num">${(x.part==="circuit"||x.sets===1)?x.reps:x.sets+" × "+x.reps}</span><span class="exdone num" data-exdone>${ico("check")}<span></span></span></span></span>${ico("right","chev")}</summary><div class="body">
+      ${x.note?`<div class="callout">${ico("info")}<span>${x.note}</span></div>`:""}<p class="how">${x.how}</p>${x.swap?`<p class="why">${ico("info","sm")}<span>Home version. ${x.swap}</span></p>`:""}${dm?`<div class="demo" data-demo="${dm.id}"><button class="ghost demobtn" type="button">${ico("right","sm")}Watch demo <span class="note">· ${esc(dm.by)}</span></button></div>`:""}${prevTxt?`<p class="last">${ico("history","sm")}<span>${prevTxt}</span></p>`:""}<div class="sets">${rows}</div></div></details>`);
     list.appendChild(block);
     const card = list.querySelector("#ex-"+x.id);
     const demo = card.querySelector(".demo");
@@ -764,7 +811,7 @@ function renderToday(){
     // Closing the card stops a playing demo and puts the button back.
     if(demo){ const btnHtml = demo.innerHTML; const onPlay = demo.querySelector("button").onclick;
       card.addEventListener("toggle", ()=>{ if(!card.open && demo.querySelector("iframe")){ demo.innerHTML = btnHtml; demo.querySelector("button").onclick = onPlay; } }); }
-    const markCard = ()=>{ let c=0; for(let i=0;i<n;i++) if(e.done[i]) c++; card.classList.toggle("complete", c===n); card.querySelector("[data-exdone] span").textContent = c+" / "+n+(n===1?" set":" sets"); };
+    const markCard = ()=>{ let c=0; for(let i=0;i<n;i++) if(e.done[i]) c++; card.classList.toggle("complete", c===n); card.querySelector("[data-exdone] span").textContent = c+" / "+n+" "+unit.toLowerCase()+(n===1?"":"s"); };
     for(let i=0;i<n;i++){
       const kg = list.querySelector(`#kg-${x.id}-${i}`), rp = list.querySelector(`#reps-${x.id}-${i}`), dn = list.querySelector(`#done-${x.id}-${i}`);
       if(kg) kg.oninput=()=>{ e.kg[i]=kg.value; draft._dirty=true;
@@ -807,7 +854,7 @@ function renderToday(){
 function renderPlan(){
   const v = document.getElementById("view");
   const cw = weekOf(today);
-  const days = [["Mon","B","k-str"],["Tue","Prep 1 + speed",""],["Wed","A","k-str"],["Thu","Rest",""],["Fri","Prep 2 + speed",""],["Sat","Rest",""],["Sun","Long",""]];
+  const days = [["Mon","Precision","k-str"],["Tue","Speed",""],["Wed","S&S","k-str"],["Thu","Rest",""],["Fri","Speed",""],["Sat","S&S","k-str"],["Sun","Long",""]];
   const tdow = (today.getDay()+6)%7;
   const week7 = days.map((d,i)=>`<div class="${d[2]} ${i===tdow?"is-today":""}"><span class="muted">${d[0]}</span><b>${d[1]}</b></div>`).join("");
   let rows = "";
@@ -819,10 +866,14 @@ function renderPlan(){
     rows += `<div class="tlrow ${now?"now":""} ${past?"past":""} ${isRace?"race-row":""}"><div class="rail"><i></i></div>
       <div class="box"><div class="t"><b>${p.name}</b>${now?'<span class="badge accent">Now</span>':""}${isRace?`<span class="badge">${ico("flag","sm")}Race</span>`:""}</div>
       <div class="wk num">Week ${p.w[0]}${p.w[1]!==p.w[0]?"–"+p.w[1]:""} · ${s.toLocaleDateString("en-GB",{day:"numeric",month:"short"})} – ${e.toLocaleDateString("en-GB",{day:"numeric",month:"short"})}</div>
-      <p class="note" style="margin-top:4px">${p.noLift?"":`<span class="num" style="color:var(--fg);font-weight:600">${p.sets} × ${p.reps} · RPE ${p.rpe}.</span> `}${p.note}</p></div></div>`;
+      <p class="note" style="margin-top:4px">${p.note}</p></div></div>`;
   });
   v.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">
     <div class="card"><h2>Every week</h2><div class="week7">${week7}</div></div>
+    <div class="card"><h2>The workouts</h2><p class="note">Precision circuits and power workouts from Jay Dicharry's <i>Running Rewired</i>, set up for your kettlebell, bands and stairs. Simple & Sinister from Pavel Tsatsouline's book. The Today tab picks the right one each day.</p>
+      <div>${WORKOUT_ORDER.map(id=>{ const wk=WORKOUTS[id]; const items=[...(wk.pre||[]),...(wk.circuit||[]),...(wk.post||[]),...(wk.items||[])];
+        return `<details class="fuelrace"><summary><span><b>${wk.kind==="ss"?"":wk.num+". "}${wk.name}</b> <span class="note">· ${KIND_LABEL[wk.kind].replace(" workout","").replace("Kettlebell practice","Kettlebell")} · ${wk.min}${wk.rounds?` · ${wk.rounds} rounds`:""}</span></span>${ico("right","sm")}</summary><ul>${items.map(([eid,sets,reps])=>`<li>${EX[eid].name}, ${sets>1&&!wk.rounds?sets+" × ":""}${reps}${EX[eid].swap?' <span class="note">(home version)</span>':""}</li>`).join("")}</ul></details>`; }).join("")}</div>
+      <p class="note">Left out: the hang spine twist in Power A, which needs a pull-up bar.</p></div>
     <div class="card"><h2>Race week checklists</h2><p class="note">Each one shows on the Today tab during its race week. You can tick items here too.</p><div id="rcPlan" style="display:flex;flex-direction:column;gap:12px"></div></div>
     <div class="card"><h2>${ico("fuel","sm")} Fueling</h2><p class="note">How to eat for this training, in short, from Matt Fitzgerald's <i>The Endurance Diet</i> (2016).</p>
       <ul class="principles">${FUEL_HABITS.map(([t,d])=>`<li><b>${t}</b><span class="note">${d}</span></li>`).join("")}</ul>
@@ -836,7 +887,7 @@ function renderPlan(){
       <ul class="principles">${PRINCIPLES.map(([t,d])=>`<li><b>${t}</b><span class="note">${d}</span></li>`).join("")}</ul>
       <blockquote class="quote">“practice › plasticity › growth = rewired for success”</blockquote></div>
     <div class="card"><h2>22 weeks to Jablanik</h2><div class="tl">${rows}</div>
-    <div class="callout">${ico("info")}<span>Make it harder in this order: 4 s lowering, 2 s pause, up to 12 reps, then a 20–24 kg bell (needed by 28 Dec).</span></div></div></div>`;
+    <div class="callout">${ico("info")}<span>The book's rule for load: as heavy as perfect form allows. 14 kg will soon be light for squats, deadlifts and hip thrusts; slow the lowering, or get a 20–24 kg bell.</span></div></div></div>`;
   const rcp = v.querySelector("#rcPlan"); RACE_WEEKS.forEach(rw=>rcp.appendChild(renderRaceCheck(rw, -1)));
 }
 
@@ -865,15 +916,15 @@ function backupBar(v){
 }
 function renderHistory(){
   const v = document.getElementById("view");
-  const keys = Object.keys(logs).filter(k=>/_[AB]$/.test(k)).sort().reverse();
+  const keys = Object.keys(logs).filter(k=>/^\d{4}-\d\d-\d\d_(A|B|P\d|W\d+)$/.test(k)).sort().reverse();
   if(!keys.length){ v.innerHTML = `<div class="card empty"><div class="big">${ico("history")}</div><h2>No sessions yet</h2><p class="muted">Log your first session on the Today tab. Saved sessions show up here, newest first.</p></div>`; backupBar(v); return; }
   v.innerHTML = `<h2>${keys.length} session${keys.length===1?"":"s"} logged</h2><div class="hist">${keys.map(k=>{
     const l = logs[k]; const ex = Object.values(l.ex||{});
     const doneSets = ex.reduce((a,e)=>a+(e.done||[]).filter(Boolean).length,0);
     const d = new Date(k.slice(0,10)+"T00:00:00");
     return `<button class="hitem" data-key="${esc(k)}"><span class="date"><b>${d.getDate()}</b><span>${d.toLocaleDateString("en-GB",{month:"short"})}</span></span>
-      <span class="what"><b>Session ${esc(l.session)} <span class="muted" style="font-weight:500">· ${d.toLocaleDateString("en-GB",{weekday:"short"})}</span></b><span class="note">${esc(l.phase||"")}${l.note?" · "+esc(l.note):""}</span></span>
-      <span class="right num">${doneSets} sets${ico("right","sm")}</span></button>`;
+      <span class="what"><b>${WORKOUTS[l.session]?esc((WORKOUTS[l.session].kind==="ss"?"":WORKOUTS[l.session].num+". ")+WORKOUTS[l.session].name):"Session "+esc(l.session)+" (old plan)"} <span class="muted" style="font-weight:500">· ${d.toLocaleDateString("en-GB",{weekday:"short"})}</span></b><span class="note">${esc(l.phase||"")}${l.note?" · "+esc(l.note):""}</span></span>
+      <span class="right num">${doneSets} ${/^P/.test(l.session)?"ticks":"sets"}${ico("right","sm")}</span></button>`;
   }).join("")}</div>`;
   v.querySelectorAll(".hitem").forEach(b=>b.onclick=()=>{
     const k=b.dataset.key; selDate=new Date(k.slice(0,10)+"T00:00:00"); selSession=k.slice(11); draft=null; setView("today");
