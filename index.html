@@ -175,6 +175,15 @@ details.ex .body{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px
 .principles{display:flex;flex-direction:column;gap:12px;margin:0;padding:0;list-style:none}
 .principles li{display:flex;flex-direction:column;gap:2px}
 .principles b{font-family:var(--display);font-size:17px}
+.sheetwrap{position:fixed;inset:0;z-index:50;background:rgb(0 0 0 / .45);display:flex;align-items:flex-end;justify-content:center;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom,0px))}
+.sheet{width:100%;max-width:528px;max-height:85vh;overflow:auto}
+.whoopdl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:0}
+.whoopdl dt{color:var(--muted);font-size:14px}
+.whoopdl dd{margin:0}
+.whooplist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.whooplist li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--line);font-size:15px}
+.whooplist li b{text-align:right}
+.sheet .row button{flex:1;justify-content:center}
 .foodchips{display:flex;flex-wrap:wrap;gap:8px}
 .foodchips button{min-height:40px;padding:8px 12px;border-radius:999px;border:2px solid var(--line);background:var(--surface);color:var(--fg);font:inherit;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
 .foodchips button .icon{width:16px;height:16px;stroke-width:3;display:none}
@@ -819,7 +828,7 @@ function renderToday(){
         for(let j=i+1;j<n;j++){ const k2=list.querySelector(`#kg-${x.id}-${j}`); if(k2 && !k2.value && kg.value) k2.placeholder=kg.value; } };
       rp.oninput=()=>{ e.reps[i]=rp.value; draft._dirty=true; };
       dn.onclick=()=>{
-        e.done[i]=!e.done[i]; draft._dirty=true; dn.setAttribute("aria-pressed", String(!!e.done[i]));
+        e.done[i]=!e.done[i]; draft._dirty=true; if(!draft.startedAt) draft.startedAt = new Date().toISOString(); dn.setAttribute("aria-pressed", String(!!e.done[i]));
         // Ticking a set with empty fields fills in the suggested numbers, so a set done as planned is one tap.
         if(e.done[i]){
           if(kg && !kg.value && kg.placeholder){ kg.value = kg.placeholder; e.kg[i] = kg.value; }
@@ -846,9 +855,55 @@ function renderToday(){
       const ok = await saveLog(key, body);
       msg.className = "status "+(ok?"ok":"off");
       msg.innerHTML = ok ? ico("check","sm")+"Saved and synced with goblin." : ico("alert","sm")+"Saved on this phone. It will sync when goblin is reachable.";
+      showWhoop(body, wk, rx);
     }catch(err){ msg.className="status off"; msg.innerHTML = ico("alert","sm")+"Couldn't save ("+esc(err.message||"error")+"). Your sets are still here, try again."; draft._dirty=true; }
     finally{ btn.disabled=false; btn.querySelector("span").textContent="Save session"; }
   };
+}
+
+// After saving: a summary to copy into WHOOP by hand (activity, times, Strength Trainer sets).
+function whoopText(body, wk, rx){
+  const t = d => d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+  const end = new Date(body.savedAt), start = body.startedAt ? new Date(body.startedAt) : null;
+  const mins = start ? Math.max(1, Math.round((end-start)/60000)) : null;
+  const activity = wk.kind==="precision" ? "Functional Fitness" : "Weightlifting";
+  const lines = [];
+  rx.list.forEach(x=>{
+    const e = (body.ex||{})[x.id]; if(!e) return;
+    const idx = (e.done||[]).map((d,i)=>d?i:-1).filter(i=>i>=0); if(!idx.length) return;
+    const reps = idx.map(i=> e.reps[i] || firstNum(x.reps) || "("+x.reps+")" );
+    const kgs = x.noKg ? [] : idx.map(i=> e.kg[i] || "");
+    const sameR = reps.every(r=>r===reps[0]), sameK = kgs.every(k=>k===kgs[0]);
+    let txt;
+    if(sameR && sameK) txt = `${idx.length} × ${reps[0]}${kgs.length&&kgs[0]?` @ ${kgs[0]} kg`:""}`;
+    else txt = idx.map((_,j)=>`${reps[j]}${kgs.length&&kgs[j]?`@${kgs[j]}`:""}`).join(", ")+(kgs.length?" kg":"");
+    lines.push(`${x.name}: ${txt}`);
+  });
+  return {activity, start: start?t(start):null, end:t(end), mins, lines};
+}
+function showWhoop(body, wk, rx){
+  const w = whoopText(body, wk, rx);
+  const plain = [`WHOOP: ${w.activity}`, w.start?`${w.start}–${w.end} (${w.mins} min)`:`Ended ${w.end}`, "", ...w.lines].join("\n");
+  const old = document.getElementById("whoopSheet"); if(old) old.remove();
+  const sheet = el(`<div class="sheetwrap" id="whoopSheet" role="dialog" aria-modal="true" aria-labelledby="whoopTitle"><div class="sheet card">
+    <h2 id="whoopTitle">Log it in WHOOP</h2>
+    <p class="note">Saved. Now add it in WHOOP by hand: start an activity, then the Strength Trainer sets.</p>
+    <dl class="whoopdl"><dt>Activity</dt><dd><b>${w.activity}</b> <span class="note">suggested</span></dd>
+      <dt>Time</dt><dd class="num">${w.start?`<b>${w.start}–${w.end}</b> · ${w.mins} min`:`Ended <b>${w.end}</b>. Set the start time yourself.`}</dd></dl>
+    ${w.lines.length?`<div class="eyebrow">Strength Trainer</div><ul class="whooplist">${w.lines.map(l=>{ const [n,rest]=l.split(": "); return `<li><span>${esc(n)}</span><b class="num">${esc(rest)}</b></li>`; }).join("")}</ul>`:`<p class="note">No sets ticked, so there's nothing to add in the Strength Trainer.</p>`}
+    <div class="row" style="gap:8px"><button class="ghost" id="whoopCopy" type="button">Copy as text</button><button class="primary" id="whoopDone" type="button"><span>Done</span></button></div>
+    <p class="status" id="whoopMsg" role="status" aria-live="polite"></p></div></div>`);
+  document.body.appendChild(sheet);
+  const node = document.getElementById("whoopSheet");
+  const close = ()=>node.remove();
+  node.querySelector("#whoopDone").onclick = close;
+  node.onclick = ev=>{ if(ev.target===node) close(); };
+  document.addEventListener("keydown", function esc1(ev){ if(ev.key==="Escape"){ close(); document.removeEventListener("keydown", esc1); } });
+  node.querySelector("#whoopCopy").onclick = async()=>{
+    const m = node.querySelector("#whoopMsg");
+    try{ await navigator.clipboard.writeText(plain); m.textContent = "Copied."; }catch(e){ m.textContent = "Couldn't copy here. Use the list above."; }
+  };
+  node.querySelector("#whoopDone").focus();
 }
 
 function renderPlan(){
