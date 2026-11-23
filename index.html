@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Trail Strength Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one phone-width column. Race strip on top, tabs, then today's session as a checklist you fill set by set. */
+:root{
+  --bg:#eef2f1; --surface:#ffffff; --sunk:#e2e8e6; --fg:#16201e; --muted:#5a6966; --line:#cfd8d5;
+  --pine:#1f6b52; --pine-ink:#ffffff; --ice:#2f6f8f; --warn:#a35a12; --done:#1f6b52;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1514; --surface:#18201f; --sunk:#222c2a; --fg:#e4ecea; --muted:#93a39f; --line:#2e3a38;
+  --pine:#4fb48d; --pine-ink:#0b1311; --ice:#79b9d6; --warn:#e3a35a; --done:#4fb48d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1514; --surface:#18201f; --sunk:#222c2a; --fg:#e4ecea; --muted:#93a39f; --line:#2e3a38;
+  --pine:#4fb48d; --pine-ink:#0b1311; --ice:#79b9d6; --warn:#e3a35a; --done:#4fb48d; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 48px;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:.01em;margin:0;text-wrap:balance}
+h1{font-size:30px;line-height:1}
+h2{font-size:22px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.races{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.race{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.race.next{border-color:var(--pine)}
+.race b{font-family:var(--display);font-size:18px}
+.race .days{font-family:var(--display);font-size:28px;line-height:1;color:var(--pine)}
+.weekline{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--sunk);font-size:12px;font-weight:600}
+.pill.phase{background:var(--pine);color:var(--pine-ink)}
+.tabs{display:flex;gap:4px;background:var(--sunk);padding:4px;border-radius:10px}
+.tabs button{flex:1;border:0;background:transparent;color:var(--fg);font:600 14px var(--body);padding:8px 4px;border-radius:7px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);box-shadow:0 1px 2px rgb(0 0 0 / .12)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ice);outline-offset:2px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{border:1px solid var(--line);background:var(--surface);color:var(--fg);font:600 13px var(--body);padding:6px 12px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.note{font-size:13px;color:var(--muted)}
+.callout{border-left:3px solid var(--warn);padding:6px 10px;background:var(--sunk);border-radius:0 8px 8px 0;font-size:13px}
+.ex{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.ex:first-of-type{border-top:0;padding-top:0}
+.exhead{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.exhead h3{font-size:19px}
+.rx{font-family:var(--mono);font-size:13px;white-space:nowrap}
+.how{font-size:13px;color:var(--muted)}
+.last{font-size:12px;color:var(--ice)}
+.sets{display:grid;grid-template-columns:auto 1fr 1fr auto;gap:6px 8px;align-items:center}
+.sets .lab{font-size:12px;color:var(--muted);font-weight:600}
+.sets input[type=number]{width:100%;min-width:0;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:500 15px var(--mono)}
+.chk{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);cursor:pointer;display:grid;place-items:center;color:transparent;font-size:18px;padding:0}
+.chk[aria-pressed="true"]{background:var(--done);border-color:var(--done);color:var(--pine-ink)}
+.side{font-size:11px;font-weight:700;color:var(--warn)}
+textarea{width:100%;min-height:64px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit;resize:vertical}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.primary{border:0;background:var(--pine);color:var(--pine-ink);font:700 16px var(--body);padding:12px 18px;border-radius:10px;cursor:pointer;flex:1}
+.ghost{border:1px solid var(--line);background:var(--surface);color:var(--fg);font:600 13px var(--body);padding:8px 12px;border-radius:8px;cursor:pointer}
+.status{font-size:13px;color:var(--muted)}
+.rest{display:flex;flex-direction:column;gap:6px}
+.rest ul{margin:0;padding-left:18px}
+.tl{display:flex;flex-direction:column;gap:4px}
+.tlrow{display:grid;grid-template-columns:52px 1fr;gap:10px;padding:8px 10px;border-radius:8px;align-items:start}
+.tlrow.now{background:var(--sunk);outline:1.5px solid var(--pine)}
+.tlrow .wk{font-family:var(--mono);font-size:12px;color:var(--muted);padding-top:2px}
+.tlrow b{font-family:var(--display);font-size:17px}
+.tlrow.race-row b{color:var(--pine)}
+.hist{display:flex;flex-direction:column;gap:8px}
+.hitem{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;cursor:pointer;text-align:left;color:var(--fg);font:inherit;width:100%}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left}
+td input{width:72px;padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font:500 15px var(--mono)}
+.gap-good{color:var(--done);font-weight:600}
+.gap-bad{color:var(--warn);font-weight:600}
+@media (prefers-reduced-motion:no-preference){.chk{transition:background .12s}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <div class="eyebrow">Strength for trail · Niš</div>
+    <h1>Trail Strength Log</h1>
+    <div class="races" id="races"></div>
+    <div class="weekline" id="weekline"></div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tab-today" aria-selected="true" data-view="today">Today</button>
+    <button role="tab" id="tab-plan" aria-selected="false" data-view="plan">Plan</button>
+    <button role="tab" id="tab-history" aria-selected="false" data-view="history">History</button>
+    <button role="tab" id="tab-knee" aria-selected="false" data-view="knee">Knee test</button>
+  </nav>
+
+  <main id="view"></main>
+  <p class="status" id="storeStatus">Connecting to goblin…</p>
+</div>
+
+<script>
+(function(){
+const START = new Date(2026,10,23); // Monday 23 Nov 2026, week 1
+const RACES = [
+  {name:"Divča Winter Trail", date:new Date(2027,2,7), spec:"15 km · 640 m+"},
+  {name:"Jablanik Trail", date:new Date(2027,3,25), spec:"34 km · 1800 m+"}
+];
+const PHASES = [
+  {w:[1,4], name:"Foundation", sets:3, reps:"8–10", rpe:"7", note:"Learn the moves with 14 kg, then add tempo and pauses."},
+  {w:[5,5], name:"Easy week", sets:2, reps:"8", rpe:"6", note:"Holidays: half volume, or just one session."},
+  {w:[6,9], name:"Strength", sets:4, reps:"6", rpe:"8", note:"Heavier bell for split squat, RDL and step-downs."},
+  {w:[10,13], name:"Power and trail", sets:3, reps:"5", rpe:"8", power:true, note:"Jumps first in Session A. Week 12 is lighter: 2 sets."},
+  {w:[14,14], name:"Lighter", sets:2, reps:"5", rpe:"7", note:"Both sessions, 2 sets, same weight."},
+  {w:[15,15], name:"Divča race week", sets:2, reps:"5", rpe:"5–6", onlyB:true, note:"Session B on Monday only, then ankle drills. Race Sunday 7 March."},
+  {w:[16,16], name:"Recovery", sets:2, reps:"8", rpe:"6", onlyB:true, note:"Session B at 2 sets. Skip A until legs feel normal."},
+  {w:[17,20], name:"Jablanik build", sets:3, reps:"6", rpe:"8", power:true, jablanik:true, note:"More downhill work: step-downs 4 × 8, walking lunges added."},
+  {w:[21,21], name:"Taper", sets:2, reps:"5", rpe:"7", note:"Keep the weight, cut the sets."},
+  {w:[22,22], name:"Jablanik race week", sets:2, reps:"5", rpe:"5", onlyB:true, note:"Monday 19 April only, nothing after. Race Sunday 25 April."}
+];
+const POWER = [
+  {id:"pogo", name:"Pogo hops", reps:"20", how:"Quick, stiff ankles, small hops.", acc:true},
+  {id:"boxjump", name:"Squat jump or jump onto a stair", reps:"5", how:"Step down, don't jump down.", acc:true},
+  {id:"bounds", name:"Lateral bounds", reps:"6 per side", how:"Stick each landing for 2 s.", acc:true}
+];
+const A = [
+  {id:"rfess", name:"Goblet rear-foot elevated split squat", main:true, single:true, knee:true, how:"Bell at chest, back foot on the 2nd or 3rd stair, lower in 3 s."},
+  {id:"slrdl", name:"Single-leg RDL", main:true, single:true, how:"Bell in the hand opposite the standing leg."},
+  {id:"swing", name:"Kettlebell swing", reps:"15", how:"Hip snap, not a squat. Rest 60 s."},
+  {id:"stepdown", name:"Goblet eccentric step-down", main:true, single:true, knee:true, how:"One stair. Lower the free heel to the floor in 3 s."},
+  {id:"calf", name:"Single-leg calf raise, straight knee", reps:"12 per leg", single:true, how:"Off a stair, bell in one hand, 2 s up, 3 s down."},
+  {id:"copen", name:"Copenhagen plank", reps:"20 s per side", noKg:true, how:"Knee on a stair, lift hips."},
+  {id:"deadbug", name:"Dead bug", reps:"8 per side", noKg:true, how:"Lower back pressed to the floor."}
+];
+const LUNGE = {id:"lunge", name:"Goblet walking lunge", reps:"10 per leg", single:true, how:"Long controlled steps, left leg first."};
+const B = [
+  {id:"stepup", name:"Goblet step-up, two stairs", main:true, single:true, knee:true, how:"Drive through the top foot, no push from the back leg."},
+  {id:"latlunge", name:"Goblet lateral lunge", reps:"6 per side", single:true, how:"Sit back into one hip, other leg straight."},
+  {id:"spanish", name:"Spanish squat (band)", reps:"30–45 s", noKg:true, how:"Band round the railing and behind both knees, sit back, shins vertical."},
+  {id:"tke", name:"Band knee extension, left", reps:"15", noKg:true, how:"Band behind the left knee, straighten fully, squeeze the thigh."},
+  {id:"bkcalf", name:"Bent-knee single-leg calf raise", reps:"15 per leg", single:true, how:"Knee bent about 30°, bell in one hand."},
+  {id:"tib", name:"Tibialis raise", reps:"15", noKg:true, cap:2, how:"Back to the wall, heels 30 cm out, lift toes."},
+  {id:"balance", name:"Single-leg balance with reach", reps:"30 s per leg", noKg:true, how:"On a folded towel, reach forward and sideways."},
+  {id:"bandwalk", name:"Lateral band walk", reps:"12 steps each way", noKg:true, cap:2, how:"Band above knees, stay low."},
+  {id:"carry", name:"Suitcase carry", reps:"40 m per side", how:"Bell in one hand, stand tall, no lean."}
+];
+const KNEE_DATES = ["2026-11-23","2026-12-21","2027-01-18","2027-02-15"];
+
+const pad = n => String(n).padStart(2,"0");
+const iso = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const dayMs = 86400000;
+const today = new Date(); today.setHours(0,0,0,0);
+const fmt = d => d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"});
+function weekOf(d){ return Math.floor(Math.round((d - START)/dayMs)/7)+1; }
+function phaseOf(w){ return PHASES.find(p => w>=p.w[0] && w<=p.w[1]) || null; }
+function weekStart(w){ return new Date(START.getTime()+(w-1)*7*dayMs); }
+
+function prescription(session, w){
+  const p = phaseOf(w); if(!p) return null;
+  let sets = p.sets; if(w===12) sets = 2;
+  let list = [];
+  if(session==="A"){
+    if(p.power) list = list.concat(POWER.map(x=>({...x, sets:3})));
+    A.forEach(x=>{
+      let s = x.main ? sets : Math.min(sets, x.cap||3);
+      let reps = x.reps || p.reps;
+      if(p.jablanik && x.id==="stepdown"){ s = 4; reps = "8"; }
+      list.push({...x, sets:s, reps: x.main ? reps+(x.single?" per leg":"") : reps});
+    });
+    if(p.jablanik) list.push({...LUNGE, sets:3});
+  } else {
+    B.forEach(x=>{
+      let s = x.main ? sets : Math.min(sets, x.cap||3);
+      let reps = x.reps || p.reps;
+      if(p.power && x.id==="stepup"){ reps = "6"; }
+      list.push({...x, sets:s, reps: x.main ? reps+(x.single?" per leg":"") : reps,
+        how: (p.power && x.id==="stepup") ? "Fast step-ups: explosive up, slow down." : x.how});
+    });
+  }
+  return {phase:p, sets, list};
+}
+
+// ---------- storage ----------
+let db=null, uid=null, logs={}, knee={}, storeMode="local";
+function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)||"null"); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+logs = lsGet("tsl-logs") || {};
+knee = lsGet("tsl-knee") || {};
+function setStatus(t){ document.getElementById("storeStatus").textContent = t; }
+
+// Sync with the goblin server (server.py). Works offline: saves stay in this browser and sync next time.
+let online=false, syncing=null;
+function apiUrl(){ return new URL("api/sync", location.href).toString(); }
+async function sync(){
+  if(!/^https?:$/.test(location.protocol)){ setStatus("Saved in this browser. Use Export on the History tab to back it up."); return false; }
+  if(syncing) return syncing;
+  syncing = (async()=>{
+    const ctrl = new AbortController(); const t = setTimeout(()=>ctrl.abort(), 10000);
+    try{
+      const r = await fetch(apiUrl(), {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({logs, knee}), signal:ctrl.signal});
+      if(!r.ok) throw new Error("server answered "+r.status);
+      const data = await r.json();
+      logs = data.logs||{}; knee = data.knee||{};
+      if(draft && !draft._dirty) draft = null;
+      lsSet("tsl-logs",logs); lsSet("tsl-knee",knee);
+      online = true;
+      setStatus("Synced with goblin at "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})+".");
+      return true;
+    }catch(e){
+      online = false;
+      setStatus("Can't reach goblin right now. Saved in this browser, and it will sync when goblin is back.");
+      return false;
+    }finally{ clearTimeout(t); syncing=null; }
+  })();
+  return syncing;
+}
+async function connect(){
+  await sync(); render();
+  document.addEventListener("visibilitychange", async()=>{ if(document.visibilityState==="visible"){ await sync(); render(); } });
+  window.addEventListener("online", async()=>{ await sync(); render(); });
+}
+async function saveLog(key, body){
+  logs[key] = body; lsSet("tsl-logs",logs);
+  const ok = await sync();
+  return ok ? "Saved and synced with goblin." : "Saved in this browser. It will sync when goblin is reachable.";
+}
+let kneeTimer=null;
+function saveKnee(){
+  lsSet("tsl-knee",knee);
+  clearTimeout(kneeTimer);
+  kneeTimer = setTimeout(()=>{ sync(); }, 800);
+}
+
+// ---------- UI state ----------
+let view = "today";
+let selDate = new Date(today);
+let selSession = null; // "A" | "B" | null (auto)
+let draft = null; // {key, ex:{id:{kg:[],reps:[],done:[]}}, note}
+
+function autoSession(d){ const dow = d.getDay(); return dow===1?"B":dow===3?"A":null; }
+function lastFor(exId, beforeKey){
+  const keys = Object.keys(logs).filter(k=>k<beforeKey).sort().reverse();
+  for(const k of keys){ const e = logs[k].ex && logs[k].ex[exId]; if(e && (e.kg||[]).some(v=>v!==""&&v!=null)){ return {key:k, e}; } }
+  return null;
+}
+
+function renderHeader(){
+  const nextIdx = RACES.findIndex(r=>r.date>=today);
+  document.getElementById("races").innerHTML = RACES.map((r,i)=>{
+    const days = Math.round((r.date-today)/dayMs);
+    return `<div class="race ${i===nextIdx?"next":""}"><span class="eyebrow">${fmt(r.date)}</span><b>${r.name}</b><span class="muted num" style="font-size:12px">${r.spec}</span><span class="days">${days>=0?days+" days":"Done"}</span></div>`;
+  }).join("");
+  const w = weekOf(today), p = phaseOf(w);
+  document.getElementById("weekline").innerHTML = p
+    ? `<span class="pill phase">${p.name}</span><span class="num">Week ${w} of 22</span><span class="muted">${p.sets} sets · ${p.reps} reps · RPE ${p.rpe}</span>`
+    : (w<1 ? `<span class="pill">Starts Mon 23 Nov</span>` : `<span class="pill">Plan complete</span><span class="muted">Next: maintenance, 1 session a week</span>`);
+}
+
+function el(html){ const t=document.createElement("template"); t.innerHTML=html.trim(); return t.content; }
+
+function renderToday(){
+  const v = document.getElementById("view"); v.innerHTML="";
+  const w = weekOf(selDate), p = phaseOf(w);
+  const dow = selDate.getDay();
+  const session = selSession || autoSession(selDate);
+  const nav = el(`<div class="row" style="justify-content:space-between;margin-bottom:10px">
+      <button class="ghost" id="prevDay" aria-label="Previous day">‹</button>
+      <div style="text-align:center"><div class="eyebrow">${iso(selDate)===iso(today)?"Today":"Selected day"}</div><h2>${fmt(selDate)}</h2></div>
+      <button class="ghost" id="nextDay" aria-label="Next day">›</button></div>
+    <div class="seg" style="margin-bottom:12px">
+      <button id="segAuto" aria-pressed="${!selSession}">This day's plan</button>
+      <button id="segA" aria-pressed="${selSession==="A"}">Session A</button>
+      <button id="segB" aria-pressed="${selSession==="B"}">Session B</button></div>`);
+  v.appendChild(nav);
+  v.querySelector("#prevDay").onclick=()=>{ selDate=new Date(selDate.getTime()-dayMs); selDate.setHours(0,0,0,0); selSession=null; draft=null; render(); };
+  v.querySelector("#nextDay").onclick=()=>{ selDate=new Date(selDate.getTime()+dayMs); selDate.setHours(0,0,0,0); selSession=null; draft=null; render(); };
+  v.querySelector("#segAuto").onclick=()=>{ selSession=null; draft=null; render(); };
+  v.querySelector("#segA").onclick=()=>{ selSession="A"; draft=null; render(); };
+  v.querySelector("#segB").onclick=()=>{ selSession="B"; draft=null; render(); };
+
+  if(!p){ v.appendChild(el(`<div class="card"><p>${w<1?"The plan starts on Monday 23 November.":"The 22-week plan is done. Keep one strength session a week through the summer races."}</p></div>`)); return; }
+
+  if(!session){
+    const what = dow===2||dow===5 ? {t:"Speed run", d:"Run day. Strength waits until tomorrow or Wednesday."}
+      : dow===0 ? {t:"Long run", d: (RACES.some(r=>iso(r.date)===iso(selDate)) ? "Race day. Good luck." : "The key run of the week. Hike the steep climbs.")}
+      : dow===4 ? {t:"Rest or ankle routine", d:"10 minutes, optional."}
+      : {t:"Rest", d:"Easy walk and mobility. Fresh legs for Sunday."};
+    v.appendChild(el(`<div class="card rest"><h2>${what.t}</h2><p class="muted" style="margin:0">${what.d}</p>
+      ${dow===4||dow===6?`<div><div class="eyebrow">Ankle routine</div><ul><li>20 calf raises</li><li>20 tibialis raises</li><li>30 s single-leg balance per leg, eyes closed</li>${w>=10?"<li>20 pogo hops</li>":""}</ul></div>`:""}
+      <p class="note" style="margin:0">Want to lift anyway? Pick Session A or B above.</p></div>`));
+    return;
+  }
+  if(p.onlyB && session==="A"){
+    v.appendChild(el(`<div class="callout" style="margin-bottom:10px">${p.name}: the plan has Session B only this week.</div>`));
+  }
+
+  const rx = prescription(session, w);
+  const key = iso(selDate)+"_"+session;
+  if(!draft || draft.key!==key){
+    const saved = logs[key];
+    draft = saved ? JSON.parse(JSON.stringify(saved)) : {key, date:iso(selDate), session, week:w, phase:p.name, ex:{}, note:""};
+    draft.key = key;
+  }
+  const card = el(`<div class="card"><div class="exhead"><h2>Session ${session}: ${session==="A"?"strength":"single-leg, ankles, knee"}</h2><span class="rx">RPE ${p.rpe}</span></div>
+    <p class="note" style="margin:0">${p.note}</p>
+    <div class="callout">Left leg first on every single-leg move. Knee moves get one extra set on the left (marked L).</div>
+    <p class="note" style="margin:0">Warm-up, 8 min: easy skipping, 10 leg swings each way, 10 glute bridges, 20 small ankle hops.</p>
+    <div id="exlist"></div>
+    <div><label class="eyebrow" for="note">How it felt</label><textarea id="note" placeholder="Sleep, soreness, how the left knee felt"></textarea></div>
+    <div class="row"><button class="primary" id="save">Save session</button></div>
+    <p class="status" id="saveMsg">${logs[key]?"Saved earlier. Edits replace it.":""}</p></div>`);
+  v.appendChild(card);
+  const list = v.querySelector("#exlist");
+  rx.list.forEach(x=>{
+    const extra = x.knee ? 1 : 0;
+    const n = x.sets + extra;
+    const e = draft.ex[x.id] || (draft.ex[x.id] = {name:x.name, kg:[], reps:[], done:[]});
+    const prev = lastFor(x.id, key);
+    let prevTxt = "";
+    if(prev){ const kgs = prev.e.kg.filter(v=>v!==""&&v!=null); prevTxt = `Last time (${prev.key.slice(0,10)}): ${kgs.join(" / ")} kg`; }
+    let rows = `<span class="lab">Set</span><span class="lab">${x.noKg?"":"kg"}</span><span class="lab">Reps / time</span><span class="lab">Done</span>`;
+    for(let i=0;i<n;i++){
+      const isExtra = extra && i===n-1;
+      rows += `<span class="num">${i+1}${isExtra?' <span class="side">L</span>':""}</span>
+        ${x.noKg?'<span></span>':`<input type="number" inputmode="decimal" step="0.5" min="0" id="kg-${x.id}-${i}" value="${e.kg[i]??""}" placeholder="${i===0?"14":""}">`}
+        <input type="number" inputmode="numeric" min="0" id="reps-${x.id}-${i}" value="${e.reps[i]??""}">
+        <button class="chk" id="done-${x.id}-${i}" aria-pressed="${!!e.done[i]}" aria-label="Set ${i+1} done">✓</button>`;
+    }
+    const block = el(`<section class="ex"><div class="exhead"><h3>${x.name}</h3><span class="rx">${x.sets}${extra?"(+1 L)":""} × ${x.reps}</span></div>
+      <div class="how">${x.how}</div>${prevTxt?`<div class="last">${prevTxt}</div>`:""}<div class="sets">${rows}</div></section>`);
+    list.appendChild(block);
+    for(let i=0;i<n;i++){
+      const kg = list.querySelector(`#kg-${x.id}-${i}`), rp = list.querySelector(`#reps-${x.id}-${i}`), dn = list.querySelector(`#done-${x.id}-${i}`);
+      if(kg) kg.oninput=()=>{ e.kg[i]=kg.value; draft._dirty=true; };
+      rp.oninput=()=>{ e.reps[i]=rp.value; draft._dirty=true; };
+      dn.onclick=()=>{ e.done[i]=!e.done[i]; draft._dirty=true; dn.setAttribute("aria-pressed", String(!!e.done[i])); };
+    }
+  });
+  const note = v.querySelector("#note"); note.value = draft.note||""; note.oninput=()=>{ draft.note=note.value; draft._dirty=true; };
+  v.querySelector("#save").onclick = async()=>{
+    const msg = v.querySelector("#saveMsg"); msg.textContent="Saving…";
+    const body = JSON.parse(JSON.stringify(draft)); delete body.key; delete body._dirty; draft._dirty=false; body.savedAt = new Date().toISOString();
+    try{ msg.textContent = await saveLog(key, body); }
+    catch(err){ msg.textContent = "Couldn't save to your account ("+(err.code||"error")+"). It's kept on this device."; }
+  };
+}
+
+function renderPlan(){
+  const v = document.getElementById("view");
+  const cw = weekOf(today);
+  let rows = "";
+  PHASES.forEach(p=>{
+    const s = weekStart(p.w[0]), e = new Date(weekStart(p.w[1]).getTime()+6*dayMs);
+    const now = cw>=p.w[0] && cw<=p.w[1];
+    const isRace = /race week/i.test(p.name);
+    rows += `<div class="tlrow ${now?"now":""} ${isRace?"race-row":""}"><span class="wk">Wk ${p.w[0]}${p.w[1]!==p.w[0]?"–"+p.w[1]:""}</span>
+      <div><b>${p.name}</b> <span class="muted num" style="font-size:12px">${s.toLocaleDateString("en-GB",{day:"numeric",month:"short"})} – ${e.toLocaleDateString("en-GB",{day:"numeric",month:"short"})}</span>
+      <div class="note">${p.sets} sets × ${p.reps} · RPE ${p.rpe}. ${p.note}</div></div></div>`;
+  });
+  v.innerHTML = `<div class="card"><h2>22 weeks to Jablanik</h2>
+    <p class="note" style="margin:0">Mon: Session B · Tue: speed · Wed: Session A · Thu: rest · Fri: speed · Sat: rest · Sun: long run</p>
+    <div class="tl">${rows}</div>
+    <p class="note" style="margin:0">Make it harder in this order: 4 s lowering, 2 s pause, up to 12 reps, then a 20–24 kg bell (needed by 28 Dec).</p></div>`;
+}
+
+function backupBar(v){
+  const bar = el(`<div class="card" style="margin-top:12px"><h2>Backup</h2><p class="note" style="margin:0">Your log is kept on goblin and in this browser. Export gives you a file copy too.</p>
+    <div class="row"><button class="ghost" id="exportBtn">Export log</button><label class="ghost" for="importFile" style="cursor:pointer">Import log</label><input type="file" id="importFile" accept="application/json" hidden></div><p class="status" id="backupMsg"></p></div>`);
+  v.appendChild(bar);
+  v.querySelector("#exportBtn").onclick=()=>{
+    const blob = new Blob([JSON.stringify({app:"trail-strength-log",version:1,logs,knee},null,2)],{type:"application/json"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "trail-strength-log-"+iso(new Date())+".json";
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    v.querySelector("#backupMsg").textContent = "Exported.";
+  };
+  v.querySelector("#importFile").onchange=async(ev)=>{
+    const f = ev.target.files[0]; if(!f) return;
+    try{
+      const data = JSON.parse(await f.text());
+      if(!data || data.app!=="trail-strength-log") throw new Error("Not a Trail Strength Log export.");
+      logs = Object.assign({}, logs, data.logs||{}); knee = Object.assign({}, knee, data.knee||{});
+      lsSet("tsl-logs",logs); lsSet("tsl-knee",knee); draft=null; render();
+      document.getElementById("storeStatus").textContent = "Imported "+Object.keys(data.logs||{}).length+" sessions.";
+    }catch(e){ v.querySelector("#backupMsg").textContent = "Couldn't import: "+e.message; }
+  };
+}
+function renderHistory(){
+  const v = document.getElementById("view");
+  const keys = Object.keys(logs).sort().reverse();
+  if(!keys.length){ v.innerHTML = `<div class="card"><h2>No sessions yet</h2><p class="muted" style="margin:0">Log your first session on the Today tab. Saved sessions show up here, newest first.</p></div>`; backupBar(v); return; }
+  v.innerHTML = `<div class="hist">${keys.map(k=>{
+    const l = logs[k]; const ex = Object.values(l.ex||{});
+    const doneSets = ex.reduce((a,e)=>a+(e.done||[]).filter(Boolean).length,0);
+    const d = new Date(k.slice(0,10)+"T00:00:00");
+    return `<button class="hitem" data-key="${k}"><span><b>Session ${l.session}</b> · ${fmt(d)}<br><span class="note">${l.phase||""}${l.note?" · "+l.note.replace(/</g,"&lt;").slice(0,60):""}</span></span><span class="num muted">${doneSets} sets</span></button>`;
+  }).join("")}</div>`;
+  v.querySelectorAll(".hitem").forEach(b=>b.onclick=()=>{
+    const k=b.dataset.key; selDate=new Date(k.slice(0,10)+"T00:00:00"); selSession=k.slice(11); draft=null; setView("today");
+  });
+  backupBar(v);
+}
+
+function renderKnee(){
+  const v = document.getElementById("view");
+  let rows = KNEE_DATES.map(d=>{
+    const r = knee[d]||{}; const L=+r.left, R=+r.right;
+    const has = r.left!==undefined&&r.left!==""&&r.right!==undefined&&r.right!=="";
+    const gap = has ? R-L : null;
+    return `<tr><td class="num">${new Date(d+"T00:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}</td>
+      <td><input type="number" inputmode="numeric" min="0" id="kl-${d}" value="${r.left??""}" aria-label="Left reps ${d}"></td>
+      <td><input type="number" inputmode="numeric" min="0" id="kr-${d}" value="${r.right??""}" aria-label="Right reps ${d}"></td>
+      <td class="num ${gap===null?"":gap<=2?"gap-good":"gap-bad"}">${gap===null?"–":(gap>0?"+":"")+gap}</td></tr>`;
+  }).join("");
+  v.innerHTML = `<div class="card"><h2>Left vs right step-down test</h2>
+    <p class="note" style="margin:0">Count slow, controlled step-downs from one stair on each leg until form breaks. Goal: left within 2 reps of right by Divča.</p>
+    <div class="tablewrap"><table><thead><tr><th>Date</th><th>Left</th><th>Right</th><th>Gap</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  KNEE_DATES.forEach(d=>{
+    ["l","r"].forEach(s=>{
+      const inp = v.querySelector(`#k${s}-${d}`);
+      inp.onchange = ()=>{ knee[d] = {...(knee[d]||{}), [s==="l"?"left":"right"]: inp.value}; saveKnee(); renderKnee(); };
+    });
+  });
+}
+
+function setView(name){
+  view = name;
+  document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected", String(b.dataset.view===name)));
+  render();
+}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>setView(b.dataset.view));
+
+function render(){
+  renderHeader();
+  const active = document.activeElement && document.activeElement.id;
+  if(view==="today"){ if(active && /^(kg|reps|note)/.test(active)) return; renderToday(); }
+  else if(view==="plan") renderPlan();
+  else if(view==="history") renderHistory();
+  else renderKnee();
+}
+render();
+connect();
+})();
+</script>
+
+</body>
+</html>

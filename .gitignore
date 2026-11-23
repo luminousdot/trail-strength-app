@@ -1,0 +1,5 @@
+# The training log lives outside the checkout on goblin; never commit it.
+data.json
+data.json.bak
+data.json.tmp
+__pycache__/

@@ -1,0 +1,9 @@
+[Unit]
+Description=Restart Trail Strength Log after a new version is pulled
+
+[Path]
+PathChanged=/var/lib/apps/trail-strength-app.deployed
+Unit=trail-restart.service
+
+[Install]
+WantedBy=multi-user.target

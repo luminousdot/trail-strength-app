@@ -1,0 +1,14 @@
+[Unit]
+Description=Pull Trail Strength Log from GitHub
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=apps
+Group=apps
+ExecStart=/srv/apps/trail-strength-app/deploy/pull.sh
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/srv/apps/trail-strength-app /var/lib/apps

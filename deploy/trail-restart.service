@@ -1,0 +1,6 @@
+[Unit]
+Description=Restart Trail Strength Log
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl restart trail-app.service

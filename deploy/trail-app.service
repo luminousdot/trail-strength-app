@@ -1,0 +1,24 @@
+[Unit]
+Description=Trail Strength Log
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=apps
+Group=apps
+WorkingDirectory=/srv/apps/trail-strength-app
+Environment=TSL_HOST=127.0.0.1
+Environment=TSL_PORT=8787
+Environment=TSL_DATA=/srv/apps-data/trail-strength-app/data.json
+ExecStart=/usr/bin/python3 /srv/apps/trail-strength-app/server.py
+Restart=on-failure
+
+# The app can only write its data folder.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/srv/apps-data/trail-strength-app
+
+[Install]
+WantedBy=multi-user.target
