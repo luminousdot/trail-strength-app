@@ -150,6 +150,12 @@ details.rcday summary::-webkit-details-marker{display:none}
 details.prep .body{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px}
 .ex{gap:10px}
 .ex.complete{border-color:var(--done)}
+.bookseg{grid-template-columns:repeat(2,1fr)}
+.hrrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.zones{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.zones li{display:grid;grid-template-columns:5.5em 6.5em 1fr;gap:8px;align-items:baseline;padding:8px 10px;border-radius:10px;background:var(--sunk);font-size:14px}
+.zones li b{font-size:14px}
+.verdict{padding:10px 12px;border-radius:12px;background:var(--accent-soft);font-size:14px}
 .bk .gist{font-weight:600}
 .bk ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
 .bk .you{background:var(--accent-soft,transparent);border-left:3px solid var(--accent);padding:8px 12px;border-radius:0 8px 8px 0}
@@ -330,11 +336,11 @@ const RACES = [
 const PHASES = [
   {w:[1,3], name:"Build", kind:"build", note:"Monday precision circuit, Wednesday and Saturday Simple & Sinister. Two-arm swings only while you learn."},
   {w:[4,4], name:"Recovery", kind:"rec", note:"Monday precision circuit and Wednesday S&S. No Saturday session."},
-  {w:[5,7], name:"Build", kind:"build", note:"Monday precision, Wednesday and Saturday S&S. Move to one-arm swings when they feel solid."},
+  {w:[5,7], name:"Build", kind:"build", note:"Monday precision, Wednesday S&S, Saturday uphill strength (starts the 8-session block). Move to one-arm swings when they feel solid."},
   {w:[8,8], name:"Recovery", kind:"rec", note:"Monday precision and Wednesday S&S only."},
-  {w:[9,11], name:"Build", kind:"build", note:"Monday precision, Wednesday and Saturday S&S. Go up a bell when 10 × 10 feels easy."},
+  {w:[9,11], name:"Build", kind:"build", note:"Monday precision, Wednesday S&S, Saturday uphill strength. Go up a bell when 10 × 10 feels easy."},
   {w:[12,12], name:"Recovery", kind:"rec", note:"Monday precision and Wednesday S&S only."},
-  {w:[13,14], name:"Build", kind:"build", note:"Monday precision, Wednesday and Saturday S&S. Divča is a tune-up race."},
+  {w:[13,14], name:"Build", kind:"build", note:"Monday precision, Wednesday S&S, Saturday uphill strength (last two sessions). Divča is a tune-up race."},
   {w:[15,15], name:"Divča race week", kind:"race", note:"Precision circuit on Monday only. Race Sunday 7 March."},
   {w:[16,16], name:"Recovery", kind:"rec", note:"Monday precision and Wednesday S&S only."},
   {w:[17,19], name:"Power", kind:"power", note:"Six weeks to Jablanik: Running Rewired power workout on Wednesday, S&S on Saturday."},
@@ -396,6 +402,10 @@ const EX = {
   getup:{name:"Get-ups", kg:true, how:"One slow, clean rep at a time, alternating sides. If it gets shaky, stop at the stage you still control."},
   ninety:{name:"90/90 stretch", how:"Sit with the front leg bent 90° in front and the back leg 90° to the side. Chest proud, hinge forward from the hips over the front knee. Breathe and relax. Both sides."},
   qlstraddle:{name:"QL straddle", how:"Sit in a straddle, reach one arm overhead and lean the other way along the floor to stretch the side of your back. Both sides."},
+  mestep:{name:"Step-up", kg:true, how:"Stand half a stride from a step just below knee height. Step up pulling mostly with the front leg; the back leg barely helps. Knee tracks over the toes. 10 on one leg, then the other. About one rep per second.", swap:"Book: a box, with a weight vest later. At home: the stairs, holding the bell at your chest when the session says so."},
+  melunge:{name:"Front lunge", kg:true, how:"Step forward about half your height so the front leg catches your weight, knee behind the toes, then push back. 10 on one leg, then the other.", swap:"Book: a weight vest later. At home: the bell at your chest when the session says so."},
+  mesplit:{name:"Split jump", how:"From a lunge, jump up and switch legs in the air, landing softly. Alternate legs and count 10 on each.", swap:"Book: a weight vest later. At home: no weight, jumping holding a bell isn't safe."},
+  mejump:{name:"Squat jump", how:"From a squat, jump as high as you can with a strong arm swing. Land quietly, absorbing it through the toes and knees.", swap:"Book: a weight vest later. At home: no weight."},
   backlunge:{name:"Rear-foot lunge", how:"Back foot on a stair behind you. Drop into a lunge with the front shin vertical, then stand."}
 };
 // [id, sets, reps] or [id, sets, reps, note]. A workout has items, or pre / rounds+circuit / post.
@@ -408,13 +418,22 @@ const WORKOUTS = {
   W9:{name:"Horizontal force", kind:"performance", num:9, min:"45 min", items:[["longarm",1,"20 per side"],["thread",1,"20 per side"],["rdl",3,"8"],["splitbox",1,"10 per leg"],["swing",3,"8"],["archer",2,"8 per side"],["slpress",2,"8 per side"],["farmer",3,"40 s"],["hipthrust",3,"8"]]},
   W10:{name:"Vertical force", kind:"performance", num:10, min:"45 min", items:[["mbtwist",1,"80"],["kbsquat",1,"12"],["reachout",1,"20"],["bear",1,"30 steps each way"],["splitsquat",1,"10 per leg"],["squat",3,"8"],["row",2,"12"],["burpee",1,"8"],["slrdl",2,"8 per side"],["boxjump",3,"5"],["carry",4,"30 s per side"],["curls",3,"10"]]},
   SS:{name:"Simple & Sinister", kind:"ss", num:"S&S", min:"about 30 min", rounds:3, labels:{circuit:"Warm-up, 3 times through", main:"Swings, then get-ups", post:"Stretches, now or before bed"}, circuit:[["pry",3,"a few breaths at the bottom"],["bridge",3,"5, with 3 s holds"],["halo",3,"5 each way"]], main:[["ssswing",10,"10"],["getup",10,"1, switch sides each rep"]], post:[["ninety",1,"1–3 sets per side"],["qlstraddle",1,"1–3 sets per side"]]},
+  ME:{name:"Uphill strength", kind:"me", num:"ME", min:"about 45 min", items:[["mestep",6,"10 per leg"],["melunge",6,"10 per leg"],["mesplit",6,"10 per leg"],["mejump",6,"10"]]},
   W13:{name:"Power A", kind:"power", num:13, min:"45 min", items:[["longarm",1,"20 per side"],["tucktwist",3,"30 s"],["boxjump",3,"4"],["splitbox",1,"5 per side"],["rdl",3,"5"],["pushpress",3,"4 per leg"],["hipthrust",3,"6"],["pushup",3,"6"],["twisted",1,"10 per leg"]]},
   W14:{name:"Power B", kind:"power", num:14, min:"45 min", items:[["scoots",3,"10"],["rainbow",1,"5 per side"],["hipcircle",1,"5 per side"],["kbdl",1,"30"],["drivethru",1,"8 per side"],["pushpress",3,"5 per leg"],["squat",5,"5, light and fast","Complex: 5 fast squats, rest 30 s, then the jumps below. 5 rounds."],["boxjump",5,"3","Rest 90 s after the jumps, then back to the squats."],["swing",3,"6"],["burpee",1,"6"],["backlunge",1,"8 per leg"]]}
 };
-const KIND_LABEL = {precision:"Precision workout", performance:"Performance workout", power:"Power workout", ss:"Kettlebell practice"};
-const WORKOUT_ORDER = ["P1","P2","P3","SS","W13","W14"];
+const KIND_LABEL = {precision:"Precision workout", performance:"Performance workout", power:"Power workout", ss:"Kettlebell practice", me:"Uphill Athlete"};
+const WORKOUT_ORDER = ["P1","P2","P3","SS","ME","W13","W14"];
+// Uphill Athlete muscular endurance block: Saturdays of build weeks 5-14, replacing S&S. Week -> session in the book's progression.
+// After a recovery week (more than 12 days apart) the book repeats the previous session, so weeks 9 and 13 repeat.
+const ME_SESSION = {5:1,6:2,7:3,9:3,10:4,11:5,13:5,14:6};
+const ME_PLAN = [null,{sets:6,load:false,rest:"1 min"},{sets:6,load:false,rest:"1 min"},{sets:6,load:true,rest:"1 min"},{sets:6,load:true,rest:"1 min"},{sets:8,load:true,rest:"1 min"},{sets:6,load:true,rest:"30 s"},{sets:6,load:true,rest:"30 s"},{sets:8,load:true,rest:"30 s"}];
+function meSession(w){ if(ME_SESSION[w]) return ME_SESSION[w]; const before = Object.keys(ME_SESSION).map(Number).filter(x=>x<w); return before.length ? ME_SESSION[Math.max(...before)] : 1; }
+const NOSPLIT = {ss:1, me:1}; // kinds shown without a number
+// Hill sprints (Uphill Athlete): Tuesdays of weeks 1-14, before the speed run. Half in recovery weeks.
+function hillSprints(w){ if(w<1||w>14||w===15) return null; if(RECOVERY.includes(w)) return {reps:4, effort:"9/10"}; return w<=2 ? {reps:6, effort:"9/10"} : {reps:8, effort:"all-out"}; }
 // Demo videos (YouTube, checked embeddable 23 Nov 2026). Loaded only when tapped, via youtube-nocookie.
-const DEMOS = {"rfess": {"id": "iANV_6_2N_o", "by": "Horton Barbell"}, "slrdl": {"id": "9inxLLbsQPw", "by": "Zehring Physical Therapy"}, "swing": {"id": "yeB_J0rqc5Q", "by": "Cavemantraining"}, "hipthrust": {"id": "D2nNU3FonZE", "by": "Rehab My Patient"}, "stepdown": {"id": "Ig_Qo-GKjRc", "by": "MyPhysioSays"}, "calf": {"id": "3g5Mb3Y9sFU", "by": "Perfect Balance Clinic"}, "copen": {"id": "nhGK-DxiGBE", "by": "Physio Plus Fitness"}, "stepup": {"id": "W_iyzcfJbOk", "by": "The Fitness Academy"}, "latlunge": {"id": "AotXnGBys6o", "by": "Rehab My Patient"}, "tke": {"id": "siJKZ-c_P44", "by": "Balance In Motion"}, "bkcalf": {"id": "-XeTMSjpkCE", "by": "Mathew Hawkes"}, "tib": {"id": "lBCRdjdWiTI", "by": "Balance In Motion"}, "carry": {"id": "Q1GjhRDAil0", "by": "Rehab My Patient"}, "pogo": {"id": "hjprPAnfqoQ", "by": "Drs. Mike & Kelly Swann"}, "splitjump": {"id": "m0IrF39BxI0", "by": "SKLZ"}, "stairbound": {"id": "swKfVF81dmY", "by": "Stronger Runner"}, "lunge": {"id": "oV97EckMQlo", "by": "OPEX Fitness"}, "pigeon": {"id": "3w3EaRmVZ3Y", "by": "Juniper Strength & Recovery"}, "donkey": {"id": "hWocnxm1P9c", "by": "Juniper Strength & Recovery"}, "tippy": {"id": "iy3QW1EnwMs", "by": "MOBO"}, "frog": {"id": "aqtXNYdY9VE", "by": "Juniper Strength & Recovery"}, "bear": {"id": "LKXwi3-pjf8", "by": "Alaina Wood Fitness"}, "hurdle": {"id": "Zgq7uf6DDRY", "by": "Tampa Strength"}, "burpee": {"id": "G2hv_NYhM-A", "by": "BuiltLean"}, "twisted": {"id": "gG45L3_KV7I", "by": "T Nation"}, "scoots": {"id": "ODu2g9Heyts", "by": "PR MD Running"}, "rainbow": {"id": "1HqQ4TJXMbI", "by": "Kate Miller PTA"}, "hipcircle": {"id": "OvJMG4_nMFc", "by": "Coach Alyssa Chang"}, "armcircle": {"id": "riVxa9By-pM", "by": "66 Days Fitness"}, "pullapart": {"id": "pASXdGKh-nc", "by": "OPEX Fitness"}, "longarm": {"id": "kOfSF6Sy8c8", "by": "Functional Rehab Chiropractic", "near": true}, "hiptwist": {"id": "MoYxDnoqPJE", "by": "Rehab My Patient", "near": true}, "drivethru": {"id": "ehzF-EGoZg4", "by": "Meghan Callaway"}, "thread": {"id": "3Pc2-A82aIY", "by": "The Interpeak", "near": true}, "footscrew": {"id": "JoMiG-LlGvE", "by": "Sole Physical Therapy"}, "pry": {"id": "TcXOrjCAyPg", "by": "StrongFirst"}, "bridge": {"id": "PQ8ZfCx4TCE", "by": "Fitness Breakthrough Secrets"}, "halo": {"id": "jRwUtI5aIhE", "by": "StrongFirst"}, "ssswing": {"id": "PAhDt_0PjP4", "by": "StrongFirst"}, "getup": {"id": "0bWRPC49-KI", "by": "StrongFirst"}, "ninety": {"id": "sLAIpe3BXlI", "by": "Smith Physical Therapy"}, "qlstraddle": {"id": "T93y97tZoLs", "by": "PowerMonkeyFitness"}, "tucktwist": {"id": "UFiZXeDN9Gg", "by": "Total Physical Therapy"}, "boxjump": {"id": "64OAo8kINPQ", "by": "OPEX Fitness"}, "rdl": {"id": "mVSgE9S0G4w", "by": "OPEX Fitness"}, "pushpress": {"id": "gCBurTdCx10", "by": "Onnit Academy"}, "pushup": {"id": "WDIpL0pjun0", "by": "NASM"}, "kbdl": {"id": "JkiXesVkjw8", "by": "Evolve Flagstaff"}, "squat": {"id": "PCCfSO7-rUc", "by": "Horton Barbell"}};
+const DEMOS = {"mejump": {"id": "Vv9Cd8AwYZ0", "by": "NASM"}, "hillsprint": {"id": "Uv8wJlvBqgQ", "by": "coachRYP"}, "rfess": {"id": "iANV_6_2N_o", "by": "Horton Barbell"}, "slrdl": {"id": "9inxLLbsQPw", "by": "Zehring Physical Therapy"}, "swing": {"id": "yeB_J0rqc5Q", "by": "Cavemantraining"}, "hipthrust": {"id": "D2nNU3FonZE", "by": "Rehab My Patient"}, "stepdown": {"id": "Ig_Qo-GKjRc", "by": "MyPhysioSays"}, "calf": {"id": "3g5Mb3Y9sFU", "by": "Perfect Balance Clinic"}, "copen": {"id": "nhGK-DxiGBE", "by": "Physio Plus Fitness"}, "stepup": {"id": "W_iyzcfJbOk", "by": "The Fitness Academy"}, "latlunge": {"id": "AotXnGBys6o", "by": "Rehab My Patient"}, "tke": {"id": "siJKZ-c_P44", "by": "Balance In Motion"}, "bkcalf": {"id": "-XeTMSjpkCE", "by": "Mathew Hawkes"}, "tib": {"id": "lBCRdjdWiTI", "by": "Balance In Motion"}, "carry": {"id": "Q1GjhRDAil0", "by": "Rehab My Patient"}, "pogo": {"id": "hjprPAnfqoQ", "by": "Drs. Mike & Kelly Swann"}, "splitjump": {"id": "m0IrF39BxI0", "by": "SKLZ"}, "stairbound": {"id": "swKfVF81dmY", "by": "Stronger Runner"}, "lunge": {"id": "oV97EckMQlo", "by": "OPEX Fitness"}, "pigeon": {"id": "3w3EaRmVZ3Y", "by": "Juniper Strength & Recovery"}, "donkey": {"id": "hWocnxm1P9c", "by": "Juniper Strength & Recovery"}, "tippy": {"id": "iy3QW1EnwMs", "by": "MOBO"}, "frog": {"id": "aqtXNYdY9VE", "by": "Juniper Strength & Recovery"}, "bear": {"id": "LKXwi3-pjf8", "by": "Alaina Wood Fitness"}, "hurdle": {"id": "Zgq7uf6DDRY", "by": "Tampa Strength"}, "burpee": {"id": "G2hv_NYhM-A", "by": "BuiltLean"}, "twisted": {"id": "gG45L3_KV7I", "by": "T Nation"}, "scoots": {"id": "ODu2g9Heyts", "by": "PR MD Running"}, "rainbow": {"id": "1HqQ4TJXMbI", "by": "Kate Miller PTA"}, "hipcircle": {"id": "OvJMG4_nMFc", "by": "Coach Alyssa Chang"}, "armcircle": {"id": "riVxa9By-pM", "by": "66 Days Fitness"}, "pullapart": {"id": "pASXdGKh-nc", "by": "OPEX Fitness"}, "longarm": {"id": "kOfSF6Sy8c8", "by": "Functional Rehab Chiropractic", "near": true}, "hiptwist": {"id": "MoYxDnoqPJE", "by": "Rehab My Patient", "near": true}, "drivethru": {"id": "ehzF-EGoZg4", "by": "Meghan Callaway"}, "thread": {"id": "3Pc2-A82aIY", "by": "The Interpeak", "near": true}, "footscrew": {"id": "JoMiG-LlGvE", "by": "Sole Physical Therapy"}, "pry": {"id": "TcXOrjCAyPg", "by": "StrongFirst"}, "bridge": {"id": "PQ8ZfCx4TCE", "by": "Fitness Breakthrough Secrets"}, "halo": {"id": "jRwUtI5aIhE", "by": "StrongFirst"}, "ssswing": {"id": "PAhDt_0PjP4", "by": "StrongFirst"}, "getup": {"id": "0bWRPC49-KI", "by": "StrongFirst"}, "ninety": {"id": "sLAIpe3BXlI", "by": "Smith Physical Therapy"}, "qlstraddle": {"id": "T93y97tZoLs", "by": "PowerMonkeyFitness"}, "tucktwist": {"id": "UFiZXeDN9Gg", "by": "Total Physical Therapy"}, "boxjump": {"id": "64OAo8kINPQ", "by": "OPEX Fitness"}, "rdl": {"id": "mVSgE9S0G4w", "by": "OPEX Fitness"}, "pushpress": {"id": "gCBurTdCx10", "by": "Onnit Academy"}, "pushup": {"id": "WDIpL0pjun0", "by": "NASM"}, "kbdl": {"id": "JkiXesVkjw8", "by": "Evolve Flagstaff"}, "squat": {"id": "PCCfSO7-rUc", "by": "Horton Barbell"}};
 const PRINCIPLES = [
   ["Precision before load","Learn to move well with bodyweight and bands first, then add weight. Precision workouts work best just before a run."],
   ["Repeat, but vary","The same moves often, in rotating versions. Your body learns from both, so the precision workouts rotate through three circuits."],
@@ -483,7 +502,7 @@ const FUEL_HEALTH = [
   "If you feel flat for weeks, ask your doctor to check ferritin and vitamin D. Ferritin isn't on a standard blood panel, and vitamin D runs low in winter. Don't take iron unless a test says so."
 ];
 // Chapter summaries of Jay Dicharry's Running Rewired (VeloPress, 2017), written in our own words.
-const BOOK = {title:"Running Rewired", author:"Jay Dicharry, 2017", intro:"The program in this app comes from this book. Each chapter in a few lines, plus what it means for you.", chapters:[
+const BOOKS = [{id:"rr", short:"Running Rewired", title:"Running Rewired", author:"Jay Dicharry, 2017", intro:"The program in this app comes from this book. Each chapter in a few lines, plus what it means for you.", chapters:[
   {n:"Intro", t:"Setting yourself up for success", gist:"To run better you have to move better. More miles alone won't get you there.", pts:[
     "Kenyan and Tarahumara runners weren't born with perfect form. A life of moving built it.",
     "Running a lot with poor movement makes you very good at moving poorly.",
@@ -552,7 +571,86 @@ const BOOK = {title:"Running Rewired", author:"Jay Dicharry, 2017", intro:"The p
     "In the 6 weeks before a key race, add a weekly power workout.",
     "Two to three sessions a week in total. In busy race periods: 2 precision and 1 performance."],
     you:"Your week follows this: Monday precision, S&S on Wednesday and Saturday, power on Wednesdays before Jablanik, and lighter recovery weeks."}
-]};
+]},
+  {id:"ua", short:"Uphill Athlete", title:"Training for the Uphill Athlete", author:"Steve House, Scott Johnston and Kílian Jornet, 2019", intro:"The book behind your heart-rate zones, the uphill strength block and the run-week rules. Each chapter in a few lines, plus what it means for you.", chapters:[
+  {n:"1", t:"How to use this book", gist:"Not a recipe book: it explains how training works so you can plan for yourself.", pts:[
+    "The authors made most training mistakes themselves and wrote the book so you don't have to.",
+    "Identical plans don't work for everyone. Learn the why, then watch how your own body responds.",
+    "Four parts: the body, training methods, strength, and how to plan a season."],
+    you:"Use the app's plan as a start and adjust it to how you feel."},
+  {n:"2", t:"The physiology of endurance", gist:"Endurance is mostly about how much energy your aerobic system can make.", pts:[
+    "Muscles run on a fuel they constantly recycle. The aerobic system recycles it slowly but for hours; the anaerobic one fast but only briefly.",
+    "Lactate isn't waste: well-trained muscles reuse it as fuel. A big aerobic 'vacuum' clears it and lets you go faster for longer.",
+    "Aerobic deficiency: if your easy pace already feels hard, your aerobic base is too small and hard training won't fix it.",
+    "Of the three pillars (aerobic base, economy, VO2 max), VO2 max is the least trainable and predicts performance worst.",
+    "Technique on rough ground and downhills only comes from lots of running on that kind of terrain."],
+    you:"Most of your weekly running should feel easy. That's what builds the engine."},
+  {n:"3", t:"The methodologies of endurance training", gist:"How hard to train, how much, and how to recover.", pts:[
+    "Two kinds of training: capacity work builds the engine (mostly easy volume); utilisation work uses it (hard sessions). Base first.",
+    "Five zones plus recovery, set by two heart rates: the aerobic threshold (top of zone 2) and the lactate threshold (top of zone 3).",
+    "Top endurance athletes do about 80% of their training easy. Zone 3 is tempting but should stay small until the base is big.",
+    "The Ten Percent Test: if your lactate threshold heart rate is more than 10% above your aerobic threshold, keep building base.",
+    "Train consistently, increase gradually, and alternate harder and easier weeks. Recovery is food first, then sleep."],
+    you:"Set your zones on the Plan tab and check the Ten Percent Test."},
+  {n:"4", t:"Monitoring your training", gist:"Learn to read fatigue and keep a simple log.", pts:[
+    "Sore muscles, dead heavy legs and low energy need different responses. With dead legs, skip hills, intervals and strength work for a few days.",
+    "Quick checks: morning resting pulse, and how your legs feel walking up the same stairs every day.",
+    "Log time, distance, climbing and how rough the terrain was, plus a grade for how you felt.",
+    "After a cold, come back with a few easy days, not straight into the old load. Overtraining shows as deep fatigue, poor sleep and no motivation."],
+    you:"Your stairs at home make a good daily leg check."},
+  {n:"5", t:"Where theory meets reality", gist:"Test your thresholds, build volume, then add intensity carefully.", pts:[
+    "Aerobic threshold: the heart rate where you can still breathe only through the nose or talk easily. The 180-minus-age formula is a safe fallback.",
+    "Lactate threshold: average heart rate of a 30-minute, all-out but steady uphill effort after a good warm-up.",
+    "Volume is the key to the base. If you couldn't repeat today's easy workout tomorrow, it wasn't easy.",
+    "Hill sprints: 8–10 second all-out efforts on a steep hill or stairs, with full rest. They build leg power without much fatigue.",
+    "Practise fast downhills with short 1–2 minute stretches inside easy runs."],
+    you:"Your Tuesday hill sprints and the heart-rate tests come from this chapter."},
+  {n:"6", t:"Strength training for the uphill athlete", gist:"You don't need to be very strong, but you need enough strength and a lot of muscular endurance.", pts:[
+    "General strength is the foundation; specific strength turns it into climbing power.",
+    "Muscular endurance, the ability to repeat a strong movement many times, matters more for mountain running than maximum strength.",
+    "More strength makes every uphill step a smaller share of your maximum, so you tire later."],
+    you:"S&S gives you the general strength; the Saturday block adds the uphill endurance."},
+  {n:"7", t:"General strength assessment and improvement", gist:"Simple tests show whether you need basic strength work first.", pts:[
+    "Leg tests: air squat, step-up onto a box and a single-leg sit-to-stand. Watch for the knee moving toward the midline.",
+    "Core tests: a plank and a hanging leg exercise. Three stages of programmes depending on the result.",
+    "If you fail the basics, fix them before adding specific strength."],
+    you:"Watch your left knee in a slow step-up on the stairs. If it drifts in, slow down the step-ups in the strength block."},
+  {n:"8", t:"Specific strength-training methods", gist:"Turn strength into uphill power and muscular endurance.", pts:[
+    "Hill sprints build specific leg power and can stay in the plan all year.",
+    "Muscular endurance workouts make the legs, not the lungs, the limit: extra load or very steep hills.",
+    "Home version: step-ups, lunges, split jumps and squat jumps, 6–8 sets of 10, adding weight over 8 sessions.",
+    "Outdoor version: steep uphill hiking or running for 8–10 minutes with a low burn in the legs, or short uphill bounds.",
+    "Once a week is plenty. If your climbing doesn't improve week to week, you're doing too much."],
+    you:"This is your Saturday uphill strength block before Jablanik."},
+  {n:"9", t:"Programming", gist:"Plan backward from a realistic goal.", pts:[
+    "Be realistic, have a clear goal and commit to it.",
+    "Know what each workout type is for: easy zones build the engine, zone 3–4 sharpen it, sprints and strength build power.",
+    "Write the season out, then adjust it week by week."],
+    you:"Your goal is Jablanik; Divča is a tune-up race."},
+  {n:"10", t:"Transition period training", gist:"A gentle start before serious training.", pts:[
+    "Several weeks of easy, varied aerobic work and general strength before a structured plan.",
+    "One long easy workout a week, one or two strength sessions, the rest easy.",
+    "If you've been inactive, don't skip this phase."],
+    you:"You're already training regularly, so you can go straight to the base period."},
+  {n:"11", t:"Introduction to the base period", gist:"The base is where most of the gains come from.", pts:[
+    "Category 1 athletes build their base; category 2 athletes with years of volume add more intensity.",
+    "Grow weekly distance, climbing and time by at most 10%. Don't increase for more than three weeks in a row.",
+    "Increase only one thing at a time: distance, climbing or intensity.",
+    "Recovery weeks cut the load by 40–60%, with at most one hard session.",
+    "Add intensity slowly, starting with one zone 3 session a week."],
+    you:"These are your run-week rules on the Plan tab."},
+  {n:"12", t:"Skimo and ski mountaineering", gist:"The same ideas applied to uphill skiing.", pts:[
+    "Base, strength and intensity work like the running plan, with more upper-body endurance for poling.",
+    "Uphill bounding with poles replaces hill sprints."],
+    you:"Not needed for running. Useful only if you ski tour in winter."},
+  {n:"13", t:"Special considerations for mountain running", gist:"Train for the distance, climbing and terrain of your race.", pts:[
+    "For a 50 km race you should be comfortable with about 40 km weeks before starting a plan. Shorter races need less.",
+    "Train on terrain like the race, and include short fast downhills.",
+    "Climbing: start at half the race's total gain per week, and reach the full race gain in at least two big weeks before the taper.",
+    "Kílian's advice: count life stress as training stress, progress patiently, respect technical terrain, and keep it fun."],
+    you:"For Jablanik that means at least two weeks with 1800 m of climbing before the taper."}
+]}
+];
 const FOOD_TYPES = [["veg","Vegetables"],["fruit","Fruit"],["nuts","Nuts & seeds"],["meat","Meat & fish"],["grain","Whole grains"],["dairy","Dairy"]];
 function fuelTip(d){
   const dow = d.getDay(), w = weekOf(d), p = phaseOf(w), rw = raceWeekFor(d);
@@ -646,14 +744,15 @@ function firstNum(s){ const m = String(s||"").match(/\d+(\.\d+)?/); return m ? m
 function prescription(session, w){
   const wk = WORKOUTS[session]; if(!wk) return null;
   const p = phaseOf(w); const half = !!(p && p.half && (wk.kind==="power"||wk.kind==="performance"));
+  const me = wk.kind==="me" ? {n:meSession(w), repeat: w===9||w===13, ...ME_PLAN[meSession(w)]} : null;
   const mk = (it, part)=>{ const [id, sets, reps, note] = it; const e = EX[id];
     const isNote = note && note.length>2; const sfx = (!isNote && note) ? note : "";
-    const n = half ? Math.max(1, Math.ceil(sets/2)) : sets;
+    const n = me ? me.sets : half ? Math.max(1, Math.ceil(sets/2)) : sets;
     return {...e, id:id+sfx, base:id, sets:n, reps, noKg:!e.kg, part, note:isNote?note:""}; };
   let list = [];
   if(wk.items) list = wk.items.map(it=>mk(it,"main"));
   else list = [...(wk.pre||[]).map(it=>mk(it,"pre")), ...wk.circuit.map(it=>mk(it,"circuit")), ...(wk.main||[]).map(it=>mk(it,"main")), ...(wk.post||[]).map(it=>mk(it,"post"))];
-  return {workout:wk, half, list};
+  return {workout:wk, half, me, list};
 }
 
 // ---------- storage (format unchanged: tsl-logs / tsl-knee, {logs, knee} on goblin) ----------
@@ -740,6 +839,7 @@ function autoSession(d){
     if(p.kind==="power") return ({17:"W13",18:"W14",19:"W13",21:"W14"})[w] || "W13";
     return null;
   }
+  if(dow===6 && ME_SESSION[w]) return "ME";
   if(dow===6 && (p.kind==="build" || p.kind==="power")) return "SS";
   return null;
 }
@@ -781,6 +881,68 @@ function renderHeader(){
 
 function el(html){ const t=document.createElement("template"); t.innerHTML=html.trim(); return t.content; }
 
+// Hill sprints from Training for the Uphill Athlete: short, all-out, full rest. Done at the start of Tuesday's run.
+function sprintCard(hs, w){
+  const dm = DEMOS.hillsprint;
+  const c = el(`<div class="card"><span class="eyebrow">Uphill Athlete · before the run</span><h2>Hill sprints, ${hs.reps} × 10 s</h2>
+    <p class="muted">${hs.effort==="all-out"?"All-out":"Hard but not all-out (9 out of 10)"} up a steep hill or your stairs, 8–10 seconds each. Walk back down and rest a full 2 minutes, so every rep is as fast as the first.</p>
+    <ul class="principles" style="gap:6px"><li><span class="note">Warm up first: 20 minutes easy running and a few drills.</span></li>
+    <li><span class="note">${RECOVERY.includes(w)?"Recovery week, so fewer reps.":"Stop early if a rep is clearly slower than the first."} Then run your speed session as planned.</span></li></ul>
+    <div class="demo" data-demo="${dm.id}"><button class="ghost demobtn" type="button">${ico("right","sm")}Watch demo <span class="note">· ${esc(dm.by)}</span></button></div></div>`);
+  const d = c.querySelector(".demo");
+  d.querySelector("button").onclick=()=>{ const f=document.createElement("iframe");
+    f.src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(dm.id)+"?autoplay=1&rel=0&playsinline=1&modestbranding=1";
+    f.title="Hill sprint demo"; f.allow="autoplay; encrypted-media; picture-in-picture; fullscreen"; f.allowFullscreen=true; f.loading="lazy"; d.replaceChildren(f); };
+  return c;
+}
+
+// Heart-rate zones from your two thresholds, plus the book's Ten Percent Test. Stored as logs.hr and synced.
+function hrZones(aet, lt){
+  const z1 = Math.round(aet*0.9);
+  return [["Recovery","below "+Math.round(z1*0.8),"Very easy, between hard days"],
+    ["Zone 1",Math.round(z1*0.8)+"–"+z1,"Easy runs"],
+    ["Zone 2",(z1+1)+"–"+aet,"Up to your aerobic threshold. Long runs"],
+    ["Zone 3",(aet+1)+"–"+lt,"Up to your lactate threshold. Tempo"],
+    ["Zone 4","above "+lt,"Hard intervals"],
+    ["Zone 5","all-out","Hill sprints. Go by effort, not heart rate"]];
+}
+function hrCard(){
+  const hr = logs.hr || {};
+  const c = el(`<div class="card"><h2>${ico("run","sm")} Heart-rate zones</h2>
+    <p class="note">From <i>Training for the Uphill Athlete</i>. Enter your two thresholds and the zones follow.</p>
+    <div class="hrrow"><label class="field" for="hrAet">Aerobic threshold<input id="hrAet" type="number" inputmode="numeric" min="90" max="200" placeholder="bpm" value="${hr.aet||""}"></label>
+    <label class="field" for="hrLt">Lactate threshold<input id="hrLt" type="number" inputmode="numeric" min="100" max="210" placeholder="bpm" value="${hr.lt||""}"></label></div>
+    <details class="fuelrace"><summary><b>How to find them</b>${ico("right","sm")}</summary><ul>
+      <li><b>Aerobic threshold:</b> the highest heart rate at which you can still breathe only through your nose, or talk in full sentences, on an easy run. If unsure, 180 minus your age is a safe start.</li>
+      <li><b>Lactate threshold:</b> after a good warm-up, run 30 minutes uphill as hard as you can hold steadily. Your average heart rate for those 30 minutes is it.</li></ul></details>
+    <div id="hrOut" style="display:flex;flex-direction:column;gap:10px"></div></div>`);
+  const out = c.querySelector("#hrOut"), a = c.querySelector("#hrAet"), l = c.querySelector("#hrLt");
+  let t = null;
+  const draw = ()=>{
+    const aet = parseInt(a.value,10), lt = parseInt(l.value,10);
+    if(!(aet>=90 && lt>aet && lt<=220)){ out.innerHTML = `<p class="note">${a.value&&l.value?"The lactate threshold should be higher than the aerobic threshold.":"Fill in both to see your zones."}</p>`; return null; }
+    const pct = Math.round((lt/aet-1)*100);
+    out.innerHTML = `<ul class="zones">${hrZones(aet,lt).map(([z,r,d])=>`<li><b>${z}</b><span class="num">${r}</span><span class="note">${d}</span></li>`).join("")}</ul>
+      <div class="verdict"><b>Ten Percent Test: ${pct}% gap.</b> ${pct>10
+        ? "Your aerobic base still has room to grow. Keep most running in zones 1–2 and don't add more hard running yet."
+        : "Your base is solid. Up to two hard sessions a week are fine; keep easy runs in zone 1."}</div>`;
+    return {aet, lt};
+  };
+  const onInput = ()=>{ const v = draw(); if(!v) return;
+    logs.hr = {type:"hr", aet:v.aet, lt:v.lt, savedAt:new Date().toISOString()}; lsSet("tsl-logs", logs);
+    clearTimeout(t); t = setTimeout(()=>sync(), 1200); };
+  a.oninput = onInput; l.oninput = onInput; draw();
+  return c;
+}
+// Rules for building running load, in short, from Training for the Uphill Athlete.
+const RUN_RULES = [
+  ["Mostly easy","About 80% of your running in zones 1–2. If you couldn't repeat today's easy run tomorrow, it wasn't easy."],
+  ["Grow slowly","At most 10% more per week, and not more than three weeks in a row before an easier week."],
+  ["One thing at a time","Add distance, climbing or intensity, not all at once."],
+  ["Recovery weeks","Cut the load by 40–60%, with at most one hard session. In this plan: weeks 4, 8, 12, 16 and 20."],
+  ["Climbing for Jablanik","Start around 900 m of climbing a week and build to the race's 1800 m in at least two big weeks before the taper. Run rough trails and practise short fast downhills."],
+  ["Hill sprints","Once a week on Tuesdays in weeks 1–14, before the speed run. The Today tab shows them."]];
+
 function renderToday(){
   const v = document.getElementById("view"); v.innerHTML="";
   const w = weekOf(selDate), p = phaseOf(w);
@@ -797,7 +959,7 @@ function renderToday(){
       <button id="segAuto" aria-pressed="${!selSession}">Day's plan</button>
       <label class="pickwrap" aria-pressed="${!!selSession}"><span class="sr">Other workout</span><select id="segPick">
         <option value="">Other workout…</option>
-        ${WORKOUT_ORDER.map(id=>`<option value="${id}" ${selSession===id?"selected":""}>${WORKOUTS[id].kind==="ss"?"":WORKOUTS[id].num+". "}${WORKOUTS[id].name}</option>`).join("")}
+        ${WORKOUT_ORDER.map(id=>`<option value="${id}" ${selSession===id?"selected":""}>${NOSPLIT[WORKOUTS[id].kind]?"":WORKOUTS[id].num+". "}${WORKOUTS[id].name}</option>`).join("")}
         ${selSession && !WORKOUTS[selSession] ? `<option value="${esc(selSession)}" selected>Session ${esc(selSession)} (old plan)</option>` : ""}
       </select></label></div></div>`);
   v.appendChild(top);
@@ -824,6 +986,8 @@ function renderToday(){
       : {i:"moon", t:"Rest", d:"Easy walk and mobility."};
     v.appendChild(el(`<div class="card restday"><div class="big">${ico(what.i)}</div><h2>${what.t}</h2><p class="muted">${what.d}</p>
       <p class="note">Want a workout anyway? Pick one above.</p></div>`));
+    const hs = (dow===2 && !rwk) ? hillSprints(w) : null;
+    if(hs) v.appendChild(sprintCard(hs, w));
     v.appendChild(fuelCard(selDate));
     return;
   }
@@ -839,13 +1003,16 @@ function renderToday(){
   }
   const total = rx.list.reduce((a,x)=>a+x.sets,0);
 
-  const head = el(`<div class="sesshead"><div class="line"><h2>${esc(wk.name)} <span class="muted" style="font-weight:600;font-size:17px">${KIND_LABEL[wk.kind]}${wk.kind==="ss"?"":" "+wk.num}</span></h2>
+  const head = el(`<div class="sesshead"><div class="line"><h2>${esc(wk.name)} <span class="muted" style="font-weight:600;font-size:17px">${KIND_LABEL[wk.kind]}${NOSPLIT[wk.kind]?"":" "+wk.num}</span></h2>
       <span class="count num" id="progCount" aria-live="polite"></span></div>
     <div class="bar" role="progressbar" aria-label="Sets done" aria-valuemin="0" aria-valuemax="${total}" id="progBar"><span></span></div></div>`);
   v.appendChild(head);
+  if(rx.me) v.appendChild(el(`<div class="callout">${ico("info")}<span>Session ${rx.me.n} of the book's progression${rx.me.repeat?", repeated after the recovery week":""}: ${rx.me.sets} sets of each exercise, ${rx.me.rest} rest between sets, up to 2 min between exercises. ${rx.me.load?"Step-ups and lunges holding the 14 kg bell; jumps without weight.":"Body weight only."}</span></div>`));
   if(rx.half) v.appendChild(el(`<div class="callout">${ico("alert")}<span>${p.name}: half volume, the book's taper for the last 11–14 days before a peak race. Keep the speed.</span></div>`));
   v.appendChild(el(`<details class="prep"><summary><span class="row" style="gap:10px">${ico("warm")}<span>How to do it <span class="note" style="display:block;font-weight:500">${wk.min}${wk.rounds?` · ${wk.rounds} rounds`:""}</span></span></span>${ico("right","chev")}</summary>
-    <div class="body">${wk.kind==="ss"
+    <div class="body">${wk.kind==="me"
+      ? `<p>From <i>Training for the Uphill Athlete</i>. Muscular endurance: your legs, not your breathing, should be what tires. Do all sets of one exercise before the next, about one rep per second.</p><p>Warm up until you sweat: a few minutes of core work, then 15 minutes easy on the stairs or a jog, ending with 2–3 minutes harder.</p><p class="note">Expect tired legs for a couple of days, so keep Sunday's long run easy. If your climbing isn't getting easier week to week, you're doing too much.</p>`
+      : wk.kind==="ss"
       ? `<p>From Pavel Tsatsouline's <i>Kettlebell Simple & Sinister</i>. Practice, not a workout: every swing explosive, every get-up clean.</p><p>Rest between sets until you can speak in short sentences. Same sets and reps every time; progress only by weight, when it feels easy.</p><p class="note">The book starts men on 16 kg for get-ups and 24 kg for swings. Learn on 14 kg, then go heavier.</p>`
       : wk.kind==="precision"
       ? `<p>Practice, not a workout: slow, precise moves through the full range. Rest 30–45 s between exercises.</p>${wk.rounds?`<p>Go through the round list ${wk.rounds} times and tick each exercise once per round.${wk.pre?" Do the start and finish moves once.":""}</p>`:""}<p class="note">Best done just before a run, as a warm-up.</p>`
@@ -868,7 +1035,7 @@ function renderToday(){
     const e = draft.ex[x.id] || (draft.ex[x.id] = {name:x.name, kg:[], reps:[], done:[]});
     const prev = x.noKg ? null : lastFor(x.base, key);
     const unit = x.part==="circuit" ? "Round" : "Set";
-    const dm = DEMOS[x.base] || DEMOS[({splitsquat:"rfess", splitbox:"splitjump", backlunge:"rfess"})[x.base]];
+    const dm = DEMOS[x.base] || DEMOS[({splitsquat:"rfess", splitbox:"splitjump", backlunge:"rfess", mestep:"stepup", melunge:"lunge", mesplit:"splitjump"})[x.base]];
     const prevKg = prev ? prev.e.kg : [];
     const repTarget = firstNum(x.reps);
     let prevTxt = "";
@@ -986,7 +1153,7 @@ function showWhoop(body, wk, rx){
 function renderPlan(){
   const v = document.getElementById("view");
   const cw = weekOf(today);
-  const days = [["Mon","Precision","k-str"],["Tue","Speed",""],["Wed","S&S","k-str"],["Thu","Rest",""],["Fri","Speed",""],["Sat","S&S","k-str"],["Sun","Long",""]];
+  const days = [["Mon","Precision","k-str"],["Tue","Speed",""],["Wed","S&S","k-str"],["Thu","Rest",""],["Fri","Speed",""],["Sat",ME_SESSION[cw]?"Uphill":"S&S","k-str"],["Sun","Long",""]];
   const tdow = (today.getDay()+6)%7;
   const week7 = days.map((d,i)=>`<div class="${d[2]} ${i===tdow?"is-today":""}"><span class="muted">${d[0]}</span><b>${d[1]}</b></div>`).join("");
   let rows = "";
@@ -1002,10 +1169,13 @@ function renderPlan(){
   });
   v.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">
     <div class="card"><h2>Every week</h2><div class="week7">${week7}</div></div>
-    <div class="card"><h2>The workouts</h2><p class="note">Precision circuits and power workouts from Jay Dicharry's <i>Running Rewired</i>, set up for your kettlebell, bands and stairs. Simple & Sinister from Pavel Tsatsouline's book. The Today tab picks the right one each day.</p>
+    <div class="card"><h2>The workouts</h2><p class="note">Precision circuits and power workouts from Jay Dicharry's <i>Running Rewired</i>, set up for your kettlebell, bands and stairs. Simple & Sinister from Pavel Tsatsouline's book. Uphill strength from <i>Training for the Uphill Athlete</i>, on Saturdays in weeks 5–14. The Today tab picks the right one each day.</p>
       <div>${WORKOUT_ORDER.map(id=>{ const wk=WORKOUTS[id]; const items=[...(wk.pre||[]),...(wk.circuit||[]),...(wk.post||[]),...(wk.items||[])];
-        return `<details class="fuelrace"><summary><span><b>${wk.kind==="ss"?"":wk.num+". "}${wk.name}</b> <span class="note">· ${KIND_LABEL[wk.kind].replace(" workout","").replace("Kettlebell practice","Kettlebell")} · ${wk.min}${wk.rounds?` · ${wk.rounds} rounds`:""}</span></span>${ico("right","sm")}</summary><ul>${items.map(([eid,sets,reps])=>`<li>${EX[eid].name}, ${sets>1&&!wk.rounds?sets+" × ":""}${reps}${EX[eid].swap?' <span class="note">(home version)</span>':""}</li>`).join("")}</ul></details>`; }).join("")}</div>
+        return `<details class="fuelrace"><summary><span><b>${NOSPLIT[wk.kind]?"":wk.num+". "}${wk.name}</b> <span class="note">· ${KIND_LABEL[wk.kind].replace(" workout","").replace("Kettlebell practice","Kettlebell")} · ${wk.min}${wk.rounds?` · ${wk.rounds} rounds`:""}</span></span>${ico("right","sm")}</summary><ul>${items.map(([eid,sets,reps])=>`<li>${EX[eid].name}, ${sets>1&&!wk.rounds?sets+" × ":""}${reps}${EX[eid].swap?' <span class="note">(home version)</span>':""}</li>`).join("")}</ul></details>`; }).join("")}</div>
       <p class="note">Left out: the hang spine twist in Power A, which needs a pull-up bar.</p></div>
+    <div id="hrSlot"></div>
+    <div class="card"><h2>Run-week rules</h2><p class="note">How to build your running, in short, from <i>Training for the Uphill Athlete</i> (2019).</p>
+      <ul class="principles">${RUN_RULES.map(([t,d])=>`<li><b>${t}</b><span class="note">${d}</span></li>`).join("")}</ul></div>
     <div class="card"><h2>Race week checklists</h2><p class="note">Each one shows on the Today tab during its race week. You can tick items here too.</p><div id="rcPlan" style="display:flex;flex-direction:column;gap:12px"></div></div>
     <div class="card"><h2>${ico("fuel","sm")} Fueling</h2><p class="note">How to eat for this training, in short, from Matt Fitzgerald's <i>The Endurance Diet</i> (2016).</p>
       <ul class="principles">${FUEL_HABITS.map(([t,d])=>`<li><b>${t}</b><span class="note">${d}</span></li>`).join("")}</ul>
@@ -1020,6 +1190,7 @@ function renderPlan(){
       <blockquote class="quote">“practice › plasticity › growth = rewired for success”</blockquote></div>
     <div class="card"><h2>22 weeks to Jablanik</h2><div class="tl">${rows}</div>
     <div class="callout">${ico("info")}<span>The book's rule for load: as heavy as perfect form allows. 14 kg will soon be light for squats, deadlifts and hip thrusts; slow the lowering, or get a 20–24 kg bell.</span></div></div></div>`;
+  v.querySelector("#hrSlot").replaceWith(hrCard());
   const rcp = v.querySelector("#rcPlan"); RACE_WEEKS.forEach(rw=>rcp.appendChild(renderRaceCheck(rw, -1)));
 }
 
@@ -1048,14 +1219,14 @@ function backupBar(v){
 }
 function renderHistory(){
   const v = document.getElementById("view");
-  const keys = Object.keys(logs).filter(k=>/^\d{4}-\d\d-\d\d_(A|B|P\d|SS|W\d+)$/.test(k)).sort().reverse();
+  const keys = Object.keys(logs).filter(k=>/^\d{4}-\d\d-\d\d_(A|B|P\d|SS|ME|W\d+)$/.test(k)).sort().reverse();
   if(!keys.length){ v.innerHTML = `<div class="card empty"><div class="big">${ico("history")}</div><h2>No sessions yet</h2><p class="muted">Log your first session on the Today tab. Saved sessions show up here, newest first.</p></div>`; backupBar(v); return; }
   v.innerHTML = `<h2>${keys.length} session${keys.length===1?"":"s"} logged</h2><div class="hist">${keys.map(k=>{
     const l = logs[k]; const ex = Object.values(l.ex||{});
     const doneSets = ex.reduce((a,e)=>a+(e.done||[]).filter(Boolean).length,0);
     const d = new Date(k.slice(0,10)+"T00:00:00");
     return `<button class="hitem" data-key="${esc(k)}"><span class="date"><b>${d.getDate()}</b><span>${d.toLocaleDateString("en-GB",{month:"short"})}</span></span>
-      <span class="what"><b>${WORKOUTS[l.session]?esc((WORKOUTS[l.session].kind==="ss"?"":WORKOUTS[l.session].num+". ")+WORKOUTS[l.session].name):"Session "+esc(l.session)+" (old plan)"} <span class="muted" style="font-weight:500">· ${d.toLocaleDateString("en-GB",{weekday:"short"})}</span></b><span class="note">${esc(l.phase||"")}${l.note?" · "+esc(l.note):""}</span></span>
+      <span class="what"><b>${WORKOUTS[l.session]?esc((NOSPLIT[WORKOUTS[l.session].kind]?"":WORKOUTS[l.session].num+". ")+WORKOUTS[l.session].name):"Session "+esc(l.session)+" (old plan)"} <span class="muted" style="font-weight:500">· ${d.toLocaleDateString("en-GB",{weekday:"short"})}</span></b><span class="note">${esc(l.phase||"")}${l.note?" · "+esc(l.note):""}</span></span>
       <span class="right num">${doneSets} ${/^P/.test(l.session)?"ticks":"sets"}${ico("right","sm")}</span></button>`;
   }).join("")}</div>`;
   v.querySelectorAll(".hitem").forEach(b=>b.onclick=()=>{
@@ -1066,9 +1237,13 @@ function renderHistory(){
 
 function renderBook(){
   const v = document.getElementById("view");
-  v.innerHTML = `<div class="card"><h2>${BOOK.title}</h2><p class="note">${BOOK.author} · ${BOOK.intro}</p></div>`+
+  let cur = null; try{ cur = localStorage.getItem("tsl-book"); }catch(e){}
+  const BOOK = BOOKS.find(b=>b.id===cur) || BOOKS[0];
+  v.innerHTML = `<div class="seg bookseg" role="group" aria-label="Which book">${BOOKS.map(b=>`<button type="button" data-book="${b.id}" aria-pressed="${b===BOOK}">${b.short}</button>`).join("")}</div>
+    <div class="card"><h2>${BOOK.title}</h2><p class="note">${BOOK.author} · ${BOOK.intro}</p></div>`+
     BOOK.chapters.map(c=>`<details class="prep bk"><summary><span>${c.n==="Intro"?"":`<span class="num">${c.n}</span>`}<b>${c.t}</b></span>${ico("right","chev")}</summary>
       <div class="body"><p class="gist">${c.gist}</p><ul>${c.pts.map(x=>`<li>${x}</li>`).join("")}</ul><p class="you"><b>For you:</b> ${c.you}</p></div></details>`).join("");
+  v.querySelectorAll("[data-book]").forEach(b=>b.onclick=()=>{ try{ localStorage.setItem("tsl-book", b.dataset.book); }catch(e){} renderBook(); window.scrollTo({top:0}); });
 }
 function renderKnee(){
   const v = document.getElementById("view");
