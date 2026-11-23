@@ -131,6 +131,12 @@ details.prep .body{padding:0 16px 16px;display:flex;flex-direction:column;gap:10
 .exhead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
 .rx{font-weight:600;font-size:14px;white-space:nowrap;padding:3px 8px;border-radius:8px;background:var(--sunk)}
 .how{font-size:14px;color:var(--muted)}
+.why{display:flex;gap:6px;align-items:flex-start;font-size:13px;color:var(--muted);font-style:italic}
+.why .icon{flex:none;margin-top:2px}
+.principles{display:flex;flex-direction:column;gap:12px;margin:0;padding:0;list-style:none}
+.principles li{display:flex;flex-direction:column;gap:2px}
+.principles b{font-family:var(--display);font-size:17px}
+.quote{border-left:3px solid var(--accent, currentColor);padding:4px 12px;margin:0;font-style:italic}
 .last{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--fg);font-weight:500}
 .last .icon{color:var(--muted)}
 .sets{display:grid;grid-template-columns:40px 1fr 1fr 48px;gap:8px;align-items:center}
@@ -263,30 +269,41 @@ const PHASES = [
   {w:[22,22], name:"Jablanik race week", sets:2, reps:"5", rpe:"5", onlyB:true, note:"Monday 19 April only, then Trail Prep Tuesday. Race Sunday 25 April."}
 ];
 const POWER = [
-  {id:"pogo", name:"Pogo hops", reps:"20", sets:3, how:"Quick, stiff ankles, small hops.", acc:true, noKg:true},
-  {id:"splitjump", name:"Split jump onto a stair", reps:"5 per leg", sets:3, how:"One foot on the stair, drive up, switch legs in the air. No double bounce.", acc:true, noKg:true},
-  {id:"stairbound", name:"Stair bounds", reps:"12 s", sets:5, how:"Both feet, up a flight of stairs, short ground contact. Rest 90 s.", acc:true, noKg:true}
+  {id:"pogo", name:"Pogo hops", reps:"20", sets:3, how:"Quick, stiff ankles, small hops.", acc:true, noKg:true, why:"Builds the spring: stiff ankles and short ground contact store and return energy."},
+  {id:"splitjump", name:"Split jump onto a stair", reps:"5 per leg", sets:3, how:"One foot on the stair, drive up, switch legs in the air. No double bounce.", acc:true, noKg:true, why:"Fast force from one leg into the ground, the way you push up a climb."},
+  {id:"stairbound", name:"Stair bounds", reps:"12 s", sets:5, how:"Both feet, up a flight of stairs, short ground contact. Rest 90 s.", acc:true, noKg:true, why:"Power with quick contacts. If you double-bounce, go back to one step at a time."}
 ];
 const A = [
-  {id:"rfess", name:"Goblet rear-foot elevated split squat", main:true, single:true, knee:true, how:"Bell at chest, back foot on the 2nd or 3rd stair, lower in 3 s."},
-  {id:"slrdl", name:"Single-leg RDL", main:true, single:true, how:"Bell in the hand opposite the standing leg."},
-  {id:"swing", name:"Kettlebell swing", reps:"12", how:"Hip snap, not a squat. Rest 90 s."},
-  {id:"hipthrust", name:"Kettlebell hip thrust", main:true, how:"Shoulders on the bottom stair, bell on your hips, rise to a straight line, no higher."},
-  {id:"stepdown", name:"Goblet eccentric step-down", main:true, single:true, knee:true, how:"One stair. Lower the free heel to the floor in 3 s."},
-  {id:"calf", name:"Single-leg calf raise, straight knee", reps:"12 per leg", single:true, how:"Off a stair, bell in one hand, 2 s up, 3 s down."},
-  {id:"copen", name:"Copenhagen plank", reps:"20 s per side", noKg:true, how:"Knee on a stair, lift hips."}
+  {id:"rfess", name:"Goblet rear-foot elevated split squat", main:true, single:true, knee:true, how:"Bell at chest, back foot on the 2nd or 3rd stair, lower in 3 s.", why:"Single-leg strength is running strength: every stride lands on one leg."},
+  {id:"slrdl", name:"Single-leg RDL", main:true, single:true, how:"Bell in the hand opposite the standing leg.", why:"Teaches the hip, not the knee or back, to control the landing leg."},
+  {id:"swing", name:"Kettlebell swing", reps:"12", how:"Hip snap, not a squat. Rest 90 s.", why:"Hips drive, the back stays still. That hinge is what pushes you forward."},
+  {id:"hipthrust", name:"Kettlebell hip thrust", main:true, how:"Shoulders on the bottom stair, bell on your hips, rise to a straight line, no higher.", why:"Strong glutes push you horizontally. Stop at a straight line, never arch the low back."},
+  {id:"stepdown", name:"Goblet eccentric step-down", main:true, single:true, knee:true, how:"One stair. Lower the free heel to the floor in 3 s.", why:"Downhills are slow, controlled lowering. This is that, in the hall."},
+  {id:"calf", name:"Single-leg calf raise, straight knee", reps:"12 per leg", single:true, how:"Off a stair, bell in one hand, 2 s up, 3 s down.", why:"The calf and Achilles are your spring. Full range, slow lowering."},
+  {id:"copen", name:"Copenhagen plank", reps:"20 s per side", noKg:true, how:"Knee on a stair, lift hips.", why:"Inner-thigh strength keeps the pelvis level on rough ground."}
 ];
-const LUNGE = {id:"lunge", name:"Goblet walking lunge", reps:"10 per leg", single:true, how:"Long controlled steps, left leg first."};
+const LUNGE = {id:"lunge", name:"Goblet walking lunge", reps:"10 per leg", single:true, how:"Long controlled steps, left leg first.", why:"Long, controlled steps for downhill legs late in the race."};
 const B = [
-  {id:"footscrew", name:"Foot screws", reps:"20", noKg:true, cap:1, how:"Hold the railing. Big toe down, rise an inch, twist the heels in and out."},
-  {id:"stepup", name:"Goblet step-up, two stairs", main:true, single:true, knee:true, how:"Drive through the top foot, no push from the back leg."},
-  {id:"latlunge", name:"Goblet lateral lunge", reps:"6 per side", single:true, how:"Sit back into one hip, other leg straight."},
-  {id:"spanish", name:"Spanish squat (band)", reps:"30–45 s", noKg:true, how:"Band round the railing and behind both knees, sit back, shins vertical."},
-  {id:"tke", name:"Band knee extension, left", reps:"15", noKg:true, how:"Band behind the left knee, straighten fully, squeeze the thigh."},
-  {id:"bkcalf", name:"Bent-knee single-leg calf raise", reps:"15 per leg", single:true, how:"Knee bent about 30°, bell in one hand."},
-  {id:"tib", name:"Tibialis raise", reps:"15", noKg:true, cap:2, how:"Back to the wall, heels 30 cm out, lift toes."},
-  {id:"tippy", name:"Tippy twist", reps:"8 per leg", noKg:true, cap:2, how:"Balance on one leg, hinge forward, rotate the hips down and up. Big toe stays down."},
-  {id:"carry", name:"Suitcase carry", reps:"30 s per side", sets:4, how:"Bell in one hand, stand tall, no lean. Rest 45 s."}
+  {id:"footscrew", name:"Foot screws", reps:"20", noKg:true, cap:1, how:"Hold the railing. Big toe down, rise an inch, twist the heels in and out.", why:"The big toe anchors the foot. A grounded toe keeps the arch and knee from collapsing."},
+  {id:"stepup", name:"Goblet step-up, two stairs", main:true, single:true, knee:true, how:"Drive through the top foot, no push from the back leg.", why:"Climbing strength. Push only with the top leg."},
+  {id:"latlunge", name:"Goblet lateral lunge", reps:"6 per side", single:true, how:"Sit back into one hip, other leg straight.", why:"Trails move sideways too. Strength in the side-to-side plane."},
+  {id:"spanish", name:"Spanish squat (band)", reps:"30–45 s", noKg:true, how:"Band round the railing and behind both knees, sit back, shins vertical.", why:"Loads the knee with the shin vertical, a gentle way to strengthen it."},
+  {id:"tke", name:"Band knee extension, left", reps:"15", noKg:true, how:"Band behind the left knee, straighten fully, squeeze the thigh.", why:"Wakes up the left quad's last few degrees of straightening."},
+  {id:"bkcalf", name:"Bent-knee single-leg calf raise", reps:"15 per leg", single:true, how:"Knee bent about 30°, bell in one hand.", why:"Bent-knee raises reach the soleus, which takes most of the load in each stride."},
+  {id:"tib", name:"Tibialis raise", reps:"15", noKg:true, cap:2, how:"Back to the wall, heels 30 cm out, lift toes.", why:"Shin strength for steep descents and toe clearance on roots."},
+  {id:"tippy", name:"Tippy twist", reps:"8 per leg", noKg:true, cap:2, how:"Balance on one leg, hinge forward, rotate the hips down and up. Big toe stays down.", why:"Balance with the hip rotating over a steady foot, the way you land on uneven ground."},
+  {id:"carry", name:"Suitcase carry", reps:"30 s per side", sets:4, how:"Bell in one hand, stand tall, no lean. Rest 45 s.", why:"Stay tall while loaded on one side, like a pole plant or a stumble."}
+];
+const PRINCIPLES = [
+  ["Precision before load","Learn to move well with bodyweight and bands first, then add weight. That's why Trail Prep comes before your runs."],
+  ["Repeat, but vary","The same moves often, in rotating versions. Your body learns from both, so Trail Prep alternates between two circuits."],
+  ["Keep hard days apart","Hard runs and hard lifting go at least 48 hours apart. Easy running on sore legs is fine."],
+  ["Three weeks on, one lighter","Strength builds while you recover, so every fourth week drops the heavy sessions."],
+  ["Power near the race","Fast, light, explosive work belongs in the last 6 weeks before a key race."],
+  ["The big toe anchors the foot","Press the big toe down and turn the hip slightly out. The knee then stays over the foot, which matters for your left knee."],
+  ["Build a bigger spring","Running is bouncing. Stiff ankles and short ground contact return energy instead of wasting it."],
+  ["Hips drive, the back stays still","Hinge from the hips with a neutral spine in swings, deadlifts and hip thrusts."],
+  ["Base strength first","Newer lifters need about three months of basic strength before combining heavy lifts and jumps."]
 ];
 // Trail Prep: Running Rewired-style precision circuits, 15 min before Tuesday and Friday runs. Not logged.
 const PREP = {
@@ -531,7 +548,7 @@ function renderToday(){
         <button class="chk" id="done-${x.id}-${i}" aria-pressed="${!!e.done[i]}" aria-label="Set ${i+1} done">${ico("check")}</button>`;
     }
     const block = el(`<section class="card ex" id="ex-${x.id}"><div class="exhead"><h3>${x.name}</h3><span class="rx num">${x.sets}${extra?"+1L":""} × ${x.reps}</span></div>
-      <p class="how">${x.how}</p>${prevTxt?`<p class="last">${ico("history","sm")}<span>${prevTxt}</span></p>`:""}<div class="sets">${rows}</div></section>`);
+      <p class="how">${x.how}</p>${x.why?`<p class="why">${ico("info","sm")}<span>${x.why}</span></p>`:""}${prevTxt?`<p class="last">${ico("history","sm")}<span>${prevTxt}</span></p>`:""}<div class="sets">${rows}</div></section>`);
     list.appendChild(block);
     const card = list.querySelector("#ex-"+x.id);
     const markCard = ()=>{ let all=true; for(let i=0;i<n;i++) if(!e.done[i]) all=false; card.classList.toggle("complete", all); };
@@ -592,6 +609,10 @@ function renderPlan(){
   });
   v.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">
     <div class="card"><h2>Every week</h2><div class="week7">${week7}</div></div>
+    <div class="card"><h2>Principles</h2><p class="note">The ideas behind this plan, in short, from Jay Dicharry's <i>Running Rewired</i> (2017).</p>
+      <blockquote class="quote">“Variety and repetition are the building blocks of motor learning.”</blockquote>
+      <ul class="principles">${PRINCIPLES.map(([t,d])=>`<li><b>${t}</b><span class="note">${d}</span></li>`).join("")}</ul>
+      <blockquote class="quote">“practice › plasticity › growth = rewired for success”</blockquote></div>
     <div class="card"><h2>22 weeks to Jablanik</h2><div class="tl">${rows}</div>
     <div class="callout">${ico("info")}<span>Make it harder in this order: 4 s lowering, 2 s pause, up to 12 reps, then a 20–24 kg bell (needed by 28 Dec).</span></div></div></div>`;
 }
