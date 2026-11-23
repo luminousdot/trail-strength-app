@@ -74,6 +74,12 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def end_headers(self):
+        # Always revalidate the page, so a phone never keeps showing an old version of the app.
+        if not self.path.startswith("/api/"):
+            self.send_header("Cache-Control", "no-cache")
+        super().end_headers()
+
     def do_GET(self):
         path = self.path.split("?")[0]
         if path == "/api/sync":
@@ -83,6 +89,12 @@ class Handler(SimpleHTTPRequestHandler):
             self.path = "/index.html"
             return super().do_GET()
         self.send_error(404)  # never serve server.py or data.json
+
+    def do_HEAD(self):
+        if self.path.split("?")[0] in ("/", "/index.html"):
+            self.path = "/index.html"
+            return super().do_HEAD()
+        self.send_error(404)
 
     def do_POST(self):
         if self.path.split("?")[0] != "/api/sync":
