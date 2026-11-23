@@ -971,7 +971,7 @@ function backupBar(v){
 }
 function renderHistory(){
   const v = document.getElementById("view");
-  const keys = Object.keys(logs).filter(k=>/^\d{4}-\d\d-\d\d_(A|B|P\d|W\d+)$/.test(k)).sort().reverse();
+  const keys = Object.keys(logs).filter(k=>/^\d{4}-\d\d-\d\d_(A|B|P\d|SS|W\d+)$/.test(k)).sort().reverse();
   if(!keys.length){ v.innerHTML = `<div class="card empty"><div class="big">${ico("history")}</div><h2>No sessions yet</h2><p class="muted">Log your first session on the Today tab. Saved sessions show up here, newest first.</p></div>`; backupBar(v); return; }
   v.innerHTML = `<h2>${keys.length} session${keys.length===1?"":"s"} logged</h2><div class="hist">${keys.map(k=>{
     const l = logs[k]; const ex = Object.values(l.ex||{});
