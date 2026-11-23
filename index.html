@@ -9,6 +9,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<script>
+// Theme: "auto" follows the phone, "light"/"dark" override it. Kept on this device only.
+(function(){ var t=null; try{ t=localStorage.getItem("tsl-theme"); }catch(e){}
+  if(t==="light"||t==="dark") document.documentElement.setAttribute("data-theme", t); })();
+</script>
 <style>
 /* Layout: one phone-width column. Compact race and week header, today's session as cards you fill set by set,
    tab bar at the bottom where the thumb is. Palette and type follow the UI/UX Pro Max "Fitness" entry:
@@ -33,6 +38,7 @@
   --accent:#f97316; --accent-ink:#0b0f17; --accent-soft:#3a2312; --accent-text:#fb923c;
   --done:#22c55e; --done-ink:#04130a; --done-soft:#11301e;
   --warn:#fbbf24; --warn-soft:#3a2f10; --focus:#7cb4ff; --shadow:none; color-scheme:dark}
+:root[data-theme="light"]{color-scheme:light}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
@@ -54,6 +60,10 @@ button,label.btn,summary{cursor:pointer;touch-action:manipulation}
 
 /* Header */
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:32px}
+.topright{display:flex;align-items:center;gap:8px;min-width:0}
+.themebtn{width:44px;height:44px;flex:none;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg);display:grid;place-items:center;padding:0;position:relative}
+.themebtn .icon{width:20px;height:20px}
+.themebtn .tag{position:absolute;bottom:-3px;right:-3px;font-size:9px;font-weight:700;line-height:1;padding:2px 3px;border-radius:5px;background:var(--sunk);color:var(--muted);border:1px solid var(--line)}
 .sync{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--muted);min-width:0}
 .sync .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
 .sync[data-state="ok"] .dot{background:var(--done)}
@@ -262,6 +272,8 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   <symbol id="i-warm" viewBox="0 0 24 24"><path d="M12 3c1 3 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5 1-8.5z"/></symbol>
   <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17h.01"/></symbol>
   <symbol id="i-fuel" viewBox="0 0 24 24"><path d="M10 3h4v3l2 3v11a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V9l2-3z"/><path d="M8 13h8"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-auto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></symbol>
   <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></symbol>
 </svg>
 
@@ -269,7 +281,8 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   <header style="display:flex;flex-direction:column;gap:12px">
     <div class="top">
       <h1>Trail Strength</h1>
-      <span class="sync" id="sync" data-state="wait" role="status" aria-live="polite"><span class="dot"></span><span id="storeStatus">Connecting to goblin…</span></span>
+      <div class="topright"><span class="sync" id="sync" data-state="wait" role="status" aria-live="polite"><span class="dot"></span><span id="storeStatus">Connecting to goblin…</span></span>
+      <button class="themebtn" id="themeBtn" type="button"></button></div>
     </div>
     <div class="racecard" id="racecard"></div>
   </header>
@@ -523,6 +536,22 @@ function prescription(session, w){
 let logs={}, knee={};
 function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)||"null"); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+// Theme toggle: Auto -> Light -> Dark. Stored per device, not synced.
+const THEMES = {auto:{icon:"auto", tag:"A", label:"Auto, follows your phone"}, light:{icon:"sun", tag:"", label:"Light"}, dark:{icon:"moon", tag:"", label:"Dark"}};
+function getTheme(){ try{ const t=localStorage.getItem("tsl-theme"); return THEMES[t]?t:"auto"; }catch(e){ return "auto"; } }
+function applyTheme(t){
+  if(t==="auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", t);
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{
+    const light = m.media.includes("light");
+    if(t==="auto") m.content = light ? "#f4f5f7" : "#0b0f17"; else m.content = t==="dark" ? "#0b0f17" : "#f4f5f7";
+  });
+  const b = document.getElementById("themeBtn"); if(!b) return;
+  const th = THEMES[t], next = t==="auto"?"light":t==="light"?"dark":"auto";
+  b.innerHTML = ico(th.icon)+(th.tag?`<span class="tag" aria-hidden="true">${th.tag}</span>`:"");
+  b.setAttribute("aria-label", "Theme: "+th.label+". Tap for "+THEMES[next].label.split(",")[0]+".");
+  b.title = "Theme: "+th.label;
+  b.onclick = ()=>{ try{ localStorage.setItem("tsl-theme", next); }catch(e){} applyTheme(next); };
+}
 logs = lsGet("tsl-logs") || {};
 knee = lsGet("tsl-knee") || {};
 function setStatus(t, state){
@@ -907,6 +936,7 @@ function render(){
   else { if(active && /^k[lr]-/.test(active)) return; renderKnee(); }
 }
 render();
+applyTheme(getTheme());
 connect();
 })();
 </script>
