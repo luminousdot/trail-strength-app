@@ -93,7 +93,7 @@ button,label.btn,summary{cursor:pointer;touch-action:manipulation}
 
 /* Bottom tab bar */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
-.tabbar .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);height:var(--tabbar-h)}
+.tabbar .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);height:var(--tabbar-h)}
 .tabbar button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:600;color:var(--muted);min-height:48px;position:relative}
 .tabbar button .icon{width:24px;height:24px}
 .tabbar button[aria-selected="true"]{color:var(--accent-text)}
@@ -150,6 +150,10 @@ details.rcday summary::-webkit-details-marker{display:none}
 details.prep .body{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px}
 .ex{gap:10px}
 .ex.complete{border-color:var(--done)}
+.bk .gist{font-weight:600}
+.bk ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.bk .you{background:var(--accent-soft,transparent);border-left:3px solid var(--accent);padding:8px 12px;border-radius:0 8px 8px 0}
+.bk summary .num{color:var(--muted);min-width:2.6em;display:inline-block}
 details.ex{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
 details.ex.complete{border-color:var(--done)}
 details.ex summary{list-style:none;display:flex;align-items:center;gap:10px;padding:12px 16px;min-height:56px;cursor:pointer}
@@ -277,6 +281,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   <symbol id="i-plan" viewBox="0 0 24 24"><path d="M3 20l5-9 4 6 3-4 6 7z"/><path d="M8 11l1.5-2.5"/><circle cx="16.5" cy="5.5" r="1.5"/></symbol>
   <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></symbol>
   <symbol id="i-knee" viewBox="0 0 24 24"><path d="M12 4v16M8 20h8M5 7h14"/><path d="M5 7l-3 6a3 3 0 0 0 6 0zM19 7l-3 6a3 3 0 0 0 6 0z"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2z"/><path d="M4 20a2 2 0 0 0 2 2h13v-4"/></symbol>
   <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
   <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
   <symbol id="i-run" viewBox="0 0 24 24"><circle cx="14" cy="4.5" r="1.8"/><path d="M6 21l3.5-6 3 2.5V22M9 11.5l2.5-3.5 3.5 1 2 3.5h3M11.5 8l-1 6"/></symbol>
@@ -309,6 +314,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   <button role="tab" id="tab-plan" aria-selected="false" aria-controls="view" data-view="plan"><svg class="icon"><use href="#i-plan"/></svg>Plan</button>
   <button role="tab" id="tab-history" aria-selected="false" aria-controls="view" data-view="history"><svg class="icon"><use href="#i-history"/></svg>History</button>
   <button role="tab" id="tab-knee" aria-selected="false" aria-controls="view" data-view="knee"><svg class="icon"><use href="#i-knee"/></svg>Knee test</button>
+  <button role="tab" id="tab-book" aria-selected="false" aria-controls="view" data-view="book"><svg class="icon"><use href="#i-book"/></svg>Book</button>
 </div></nav>
 
 <script>
@@ -476,6 +482,77 @@ const FUEL_HEALTH = [
   "Oily fish twice a week (mackerel, sardines, salmon), or a fish oil with about 1,000 mg of EPA and DHA.",
   "If you feel flat for weeks, ask your doctor to check ferritin and vitamin D. Ferritin isn't on a standard blood panel, and vitamin D runs low in winter. Don't take iron unless a test says so."
 ];
+// Chapter summaries of Jay Dicharry's Running Rewired (VeloPress, 2017), written in our own words.
+const BOOK = {title:"Running Rewired", author:"Jay Dicharry, 2017", intro:"The program in this app comes from this book. Each chapter in a few lines, plus what it means for you.", chapters:[
+  {n:"Intro", t:"Setting yourself up for success", gist:"To run better you have to move better. More miles alone won't get you there.", pts:[
+    "Kenyan and Tarahumara runners weren't born with perfect form. A life of moving built it.",
+    "Running a lot with poor movement makes you very good at moving poorly.",
+    "Deliberate practice beats volume: work on specific skills, with the aim of getting better at them.",
+    "It costs two short extra sessions a week. Most runners gain more from swapping one run for skill work than from another run."],
+    you:"Your Monday precision circuit and the S&S days are those two sessions."},
+  {n:"1", t:"Think backward to run forward", gist:"Work out what running demands of your body, then train for exactly that.", pts:[
+    "Every stride puts 2.5–3 times your body weight through one leg, plus braking and sideways forces. Running is big loads for a long time, not small ones.",
+    "Joints, muscles and the nervous system talk to each other on every step. The nervous system can learn new patterns at any age.",
+    "Most runners run on a Plan B: a workaround for stiffness or weak control. The goal is to get your own Plan A back.",
+    "Train two things: precision (mobility and stability, so you stay healthy) and spring (pushing force into the ground fast, so you get faster)."],
+    you:"Precision days build durability; the power weeks before Jablanik build the spring."},
+  {n:"2", t:"Troubleshoot broken wiring", gist:"Problems often come from muscles that are switched off, not weak.", pts:[
+    "A knee that drops inward is usually hip muscles that don't fire, so heavy squats alone won't fix it. The body simply cheats around it.",
+    "Running is a reflex run from the spinal cord, which is why form cues barely stick at first.",
+    "A new movement goes from hard thinking, to doable with effort, to automatic. In his example that took about four weeks, faster than muscle can grow, so it's wiring, not strength.",
+    "Train movements, not single muscles. Precision work is high reps, little load, a couple of times a week, all season."],
+    you:"This is the case for your left knee: the circuits teach the hip to steer it."},
+  {n:"3", t:"Mobility and stability for runability", gist:"Find out why a joint won't move, fix that, then learn to control the new range.", pts:[
+    "Flexibility is passive. Mobility is moving a joint yourself, and that's what running needs.",
+    "Software problem: the joint can move but the nervous system holds it back. A warm-up fixes it.",
+    "Hardware problems: a stuck joint (a pinch on the front of it, see a physio, stretching won't help), tissue that's too short (real lengthening takes about 3 minutes a day, 4–5 days a week, for about 10 weeks, after training), or gummed-up tissue after hard training (foam roller).",
+    "Stability means controlling movement in all three directions, not holding a plank for minutes."],
+    you:"Do any long stretching after runs or at night, like the S&S stretches."},
+  {n:"4", t:"Your body drives your form", gist:"There is no single perfect form. Yours should be economical, low-stress and even on both sides.", pts:[
+    "Tendons work like a slingshot and supply about half the energy of each stride. Landing close to your body with a neutral spine makes the most of it.",
+    "Stress comes from overstriding (load arrives too fast) and from wobbling. Where your foot lands relative to your body matters more than heel or forefoot.",
+    "180 steps a minute is a reference, not a rule. Under about 170 at moderate pace, raise it 5–10% at a time.",
+    "If your cadence drops a lot late in a long run, your form is falling apart when tired."],
+    you:"Check cadence on your watch on the Sunday long run, early versus late."},
+  {n:"5", t:"Don't break your pivot point", gist:"Posture is a skill, and poor posture costs energy, especially when tired.", pts:[
+    "Think of a drinks can: upright it carries a lot, dented it crumples. Core stability is good position, not crunches.",
+    "Tight hips below and a stiff mid back and shoulders above dent the can. A slumped mid back makes you arch the low back and breathe with the chest.",
+    "Fix order: loosen the mid back (ball mobility), open the chest, then hold the shoulders down and back (arm circles, pull-aparts, overhead carry).",
+    "His 800 m runner could train as hard as he liked, but only while his posture held."],
+    you:"Run tall with a slight forward lean. When posture goes on a hard rep, the quality is gone."},
+  {n:"6", t:"The secret of counter-rotation", gist:"Every stride twists you. You need to be able to twist and to control it.", pts:[
+    "When the foot lands, a twisting force runs up the body and the other side counters it.",
+    "A stiff foot or a spine that can't rotate blocks this, and the sideways kick can grow two or three times.",
+    "You need three things: twist the spine, steer from the hip, and let the foot adapt to the ground.",
+    "Asked to rotate, most people side-bend instead. True rotation has to be practised."],
+    you:"Twisted warrior, butt scoots, thread-the-needle and the long-arm band squat train this. On trails it matters even more."},
+  {n:"7", t:"Push for better propulsion", gist:"Most runners pull themselves along with the quads. Drive from the glutes instead.", pts:[
+    "Years of overstriding wire you to the quads and switch the glutes off.",
+    "Relying on the quads loads the kneecap, tires faster (more fast-twitch fibres) and gives less control.",
+    "The big glute pushes the hip back, stops the thigh twisting in (most knee collapse is rotation) and keeps the pelvis upright.",
+    "About 80% of runners need hip flexor stretching. Mantra: drive from the hips, keep the spine stable."],
+    you:"Swings, bridges and the hip circuit are your glute work. Think of this mantra on climbs."},
+  {n:"8", t:"Alignment is not one-size-fits-all", gist:"Your bones have their own twist, and your feet and knees should follow it.", pts:[
+    "Thigh and shin bones can be straight or twisted in or out from birth. You can't stretch that away.",
+    "Forcing feet to point straight can cause knee pain. His runner Megan's knees tracked fine once her feet pointed to 11 and 1 on a clock.",
+    "A simple mirror test, or a physio, tells you which way your knees and feet naturally point.",
+    "Set up squats, lunges, single-leg work and running to respect your own alignment."],
+    you:"Worth checking how your left knee tracks in a slow single-leg squat in front of a mirror."},
+  {n:"9", t:"Build a bigger spring", gist:"Running is bouncing. Strength and jumping build a stiffer spring and a faster stride.", pts:[
+    "Your foot is on the ground only about a quarter of a second, so what matters is how fast you produce force.",
+    "Strength training improves economy at every age. A study of over 26,000 athletes found a third fewer injuries and half the overuse injuries.",
+    "Three patterns: deadlift (forward drive), squat (up and down) and core control under load.",
+    "Form first. Go as heavy as form allows, move smoothly, don't lift to failure or hold your breath. Add weight when form holds and speed doesn't drop much within the set.",
+    "It won't bulk you up. A little extra muscle pays for itself in force."],
+    you:"Heavier swings over time follow this. Keep the hips snapping fast."},
+  {n:"10", t:"A master plan to master running", gist:"How to fit it all around your running.", pts:[
+    "Precision workouts take 15–20 minutes, work best just before a run as a warm-up, and should rotate.",
+    "Performance workouts take about 45 minutes. Keep them 48 hours from your hard runs. Easy runs on sore legs are fine.",
+    "Every fourth week, drop the performance workout and keep precision.",
+    "In the 6 weeks before a key race, add a weekly power workout.",
+    "Two to three sessions a week in total. In busy race periods: 2 precision and 1 performance."],
+    you:"Your week follows this: Monday precision, S&S on Wednesday and Saturday, power on Wednesdays before Jablanik, and lighter recovery weeks."}
+]};
 const FOOD_TYPES = [["veg","Vegetables"],["fruit","Fruit"],["nuts","Nuts & seeds"],["meat","Meat & fish"],["grain","Whole grains"],["dairy","Dairy"]];
 function fuelTip(d){
   const dow = d.getDay(), w = weekOf(d), p = phaseOf(w), rw = raceWeekFor(d);
@@ -987,6 +1064,12 @@ function renderHistory(){
   backupBar(v);
 }
 
+function renderBook(){
+  const v = document.getElementById("view");
+  v.innerHTML = `<div class="card"><h2>${BOOK.title}</h2><p class="note">${BOOK.author} · ${BOOK.intro}</p></div>`+
+    BOOK.chapters.map(c=>`<details class="prep bk"><summary><span>${c.n==="Intro"?"":`<span class="num">${c.n}</span>`}<b>${c.t}</b></span>${ico("right","chev")}</summary>
+      <div class="body"><p class="gist">${c.gist}</p><ul>${c.pts.map(x=>`<li>${x}</li>`).join("")}</ul><p class="you"><b>For you:</b> ${c.you}</p></div></details>`).join("");
+}
 function renderKnee(){
   const v = document.getElementById("view");
   const nextD = KNEE_DATES.find(d=>{ const r=knee[d]||{}; return !(r.left&&r.right); });
@@ -1039,6 +1122,7 @@ function render(){
   if(view==="today"){ if(active && /^(kg|reps|note)/.test(active)) return; renderToday(); }
   else if(view==="plan") renderPlan();
   else if(view==="history") renderHistory();
+  else if(view==="book") renderBook();
   else { if(active && /^k[lr]-/.test(active)) return; renderKnee(); }
 }
 render();
