@@ -125,6 +125,13 @@ details.prep summary{list-style:none;display:flex;align-items:center;justify-con
 details.prep summary::-webkit-details-marker{display:none}
 details.prep summary .chev{transition:transform .2s}
 details.prep[open] summary .chev{transform:rotate(90deg)}
+details.rcday{border-top:1px solid var(--line)}
+details.rcday summary{list-style:none;display:flex;justify-content:space-between;align-items:center;padding:10px 0;cursor:pointer;min-height:44px}
+details.rcday summary::-webkit-details-marker{display:none}
+.rclist{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-direction:column;gap:8px}
+.rclist li{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.rclist .chk{flex:none;width:32px;height:32px}
+.rclist li span{padding-top:5px}
 details.prep .body{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px}
 .ex{gap:10px}
 .ex.complete{border-color:var(--done)}
@@ -305,6 +312,61 @@ const PRINCIPLES = [
   ["Hips drive, the back stays still","Hinge from the hips with a neutral spine in swings, deadlifts and hip thrusts."],
   ["Base strength first","Newer lifters need about three months of basic strength before combining heavy lifts and jumps."]
 ];
+// Race-week checklists. Ticks are saved in the log as logs["race-divca"] / logs["race-jablanik"].
+const RACE_WEEKS = [
+  {id:"divca", race:0, start:new Date(2027,2,1), intro:"15 km, 640 m+, in winter. Short and steep: grip and warmth matter more than food.", days:[
+    {t:"Mon 1 Mar", items:[["d1-b","Last strength session: Session B, light, 2 sets"],["d1-kit","Read the race's mandatory kit list on the official site"],["d1-start","Note start time, bib pickup and travel to Divčibare"]]},
+    {t:"Tue 2 Mar", items:[["d2-prep","Trail Prep 1, then 30 min easy with 4 × 20 s relaxed strides. No speed session"],["d2-shoes","Run in your race shoes and socks to check them"]]},
+    {t:"Wed 3 Mar", items:[["d3-run","Easy 30 min or rest. No lifting"],["d3-grip","Decide on grip: lugged shoes, and microspikes if the course is icy"],["d3-layers","Lay out layers: hat, gloves, buff, waterproof jacket"]]},
+    {t:"Thu 4 Mar", items:[["d4-rest","Rest or 20 min easy"],["d4-course","Study the 15 km profile: where the climbs are, where to hike, which descents may be icy"],["d4-weather","Check the forecast for Divčibare and plan layers for it"]]},
+    {t:"Fri 5 Mar", items:[["d5-run","20 min easy with a few strides"],["d5-food","Normal meals with a bit more carbohydrate. No new foods"],["d5-sleep","8 hours of sleep. Friday night counts more than Saturday"]]},
+    {t:"Sat 6 Mar", items:[["d6-shake","Rest or a 15 min shakeout"],["d6-pack","Pack: bib, pins, 1–2 gels, 500 ml soft flask, dry warm clothes for after"],["d6-dinner","Familiar dinner with rice or pasta, early"],["d6-bed","In bed early. Alarm set, kit by the door"]]},
+    {t:"Sun 7 Mar · Race", items:[["d7-bfast","Familiar breakfast 2–3 hours before the start"],["d7-warm","Warm up 10 min easy plus leg swings. Stay warm until the start"],["d7-pace","Start steady on the first climb, hike the steep parts"],["d7-after","Dry clothes and a warm drink straight after"]]}
+  ]},
+  {id:"jablanik", race:1, start:new Date(2027,3,19), intro:"34 km, 1800 m+. Long: fuelling, pacing and downhill legs decide it.", days:[
+    {t:"Mon 19 Apr", items:[["j1-b","Last strength session: Session B, light, 2 sets"],["j1-kit","Read the race's mandatory kit list on the official site and check every item"],["j1-start","Note start time, bib pickup, cut-off times and travel"]]},
+    {t:"Tue 20 Apr", items:[["j2-prep","Trail Prep 1, then 40 min easy with 4 × 20 s strides. No speed session"],["j2-pack","Run with the full race vest loaded, to check it doesn't bounce or rub"]]},
+    {t:"Wed 21 Apr", items:[["j3-run","Easy 30–40 min. No lifting"],["j3-shoes","Shoes and socks you've already done a 3-hour run in"],["j3-poles","Decide on poles, if allowed, and practise folding them"]]},
+    {t:"Thu 22 Apr", items:[["j4-rest","Rest or 20 min easy"],["j4-course","Study the 34 km profile and aid stations. Mark the long climbs to hike"],["j4-fuel","Plan fuel: about 60 g carbohydrate an hour from the first hour, and what you'll take at each aid station"]]},
+    {t:"Fri 23 Apr", items:[["j5-run","20 min easy with a few strides"],["j5-carbs","Carbohydrate-rich meals today and tomorrow. Nothing new"],["j5-sleep","8 hours of sleep. Friday night counts more than Saturday"],["j5-weather","Check the forecast and pack for rain and cold on the tops"]]},
+    {t:"Sat 24 Apr", items:[["j6-shake","Rest or a 15 min shakeout"],["j6-pack","Pack the vest: mandatory kit, gels or bars for 5–6 hours, 1–1.5 l of water, salt"],["j6-dinner","Familiar dinner, early"],["j6-bed","In bed early. Alarm set, kit by the door"]]},
+    {t:"Sun 25 Apr · Race", items:[["j7-bfast","Familiar breakfast 3 hours before the start"],["j7-pace","Start slower than feels right. Hike every steep climb"],["j7-eat","Eat every 30–40 min from the start, drink to thirst"],["j7-down","Save the legs for the last descents: short, quick steps"]]}
+  ]}
+];
+function raceWeekFor(d){ return RACE_WEEKS.find(r=>{ const a=r.start.getTime(), b=a+7*dayMs; return d.getTime()>=a && d.getTime()<b; }) || null; }
+let raceSaveTimer=null;
+function renderRaceCheck(rw, openDay){
+  const key = "race-"+rw.id;
+  const saved = logs[key] || {};
+  const checked = Object.assign({}, saved.checked||{});
+  const total = rw.days.reduce((a,d)=>a+d.items.length,0);
+  const count = () => rw.days.reduce((a,d)=>a+d.items.filter(i=>checked[i[0]]).length,0);
+  const r = RACES[rw.race];
+  const frag = el(`<div class="card racecheck"><div class="line" style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+      <h2>${ico("flag","sm")} ${r.short} race week</h2><span class="num note" data-rc-count>${count()} / ${total}</span></div>
+    <p class="note">${rw.intro}</p>
+    ${rw.days.map((d,di)=>{
+      const n = d.items.filter(i=>checked[i[0]]).length;
+      return `<details class="rcday" ${di===openDay?"open":""}><summary><b>${d.t}</b><span class="num note">${n}/${d.items.length}</span></summary>
+        <ul class="rclist">${d.items.map(([id,txt])=>`<li><button class="chk sm" data-rc="${id}" aria-pressed="${!!checked[id]}" aria-label="${esc(txt)}">${ico("check")}</button><span>${txt}</span></li>`).join("")}</ul></details>`;
+    }).join("")}
+    <p class="status" data-rc-msg role="status" aria-live="polite"></p></div>`);
+  const card = frag.firstElementChild;
+  card.querySelectorAll("[data-rc]").forEach(btn=>btn.onclick=()=>{
+    const id=btn.dataset.rc; checked[id]=!checked[id]; if(!checked[id]) delete checked[id];
+    btn.setAttribute("aria-pressed", String(!!checked[id]));
+    card.querySelector("[data-rc-count]").textContent = count()+" / "+total;
+    const det = btn.closest("details"); const items = det.querySelectorAll("[data-rc]");
+    det.querySelector("summary .note").textContent = [...items].filter(b=>b.getAttribute("aria-pressed")==="true").length+"/"+items.length;
+    logs[key] = {type:"race", race:rw.id, checked:{...checked}, savedAt:new Date().toISOString()}; lsSet("tsl-logs",logs);
+    clearTimeout(raceSaveTimer);
+    raceSaveTimer = setTimeout(async()=>{
+      const ok = await sync();
+      const m = card.querySelector("[data-rc-msg]"); if(m) m.textContent = ok ? "Saved and synced with goblin." : "Saved on this phone. It will sync when goblin is reachable.";
+    }, 700);
+  });
+  return frag;
+}
 // Trail Prep: Running Rewired-style precision circuits, 15 min before Tuesday and Friday runs. Not logged.
 const PREP = {
   1: {title:"Trail Prep 1: feet and hips", items:["Foot screws × 20","Tippy twist × 8 per leg","Pigeon hip extension × 15 per side","Frog bridge × 25, soles together","Donkey toes, 4 × 30 s","Lateral hop over a rolled towel, 20 s"]},
@@ -480,11 +542,14 @@ function renderToday(){
   v.querySelector("#segA").onclick=go(()=>{ selSession="A"; });
   v.querySelector("#segB").onclick=go(()=>{ selSession="B"; });
 
+  const rwk = raceWeekFor(selDate);
+  if(rwk) v.appendChild(renderRaceCheck(rwk, Math.round((selDate-rwk.start)/dayMs)));
   if(!p){ v.appendChild(el(`<div class="card"><p>${w<1?"The plan starts on Monday 23 November.":"The 22-week plan is done. Keep one strength session a week through the summer races."}</p></div>`)); return; }
 
   if(!session){
     const isRaceDay = RACES.some(r=>iso(r.date)===iso(selDate));
-    const what = dow===2||dow===5 ? {i:"run", t:"Trail Prep, then speed run", d:"Do the 15-minute circuit below as your warm-up, then run."}
+    const what = (rwk && (dow===2||dow===5)) ? {i:"run", t:"Trail Prep, then easy run", d:"Race week: easy running only, with a few relaxed strides."}
+      : dow===2||dow===5 ? {i:"run", t:"Trail Prep, then speed run", d:"Do the 15-minute circuit below as your warm-up, then run."}
       : (p.noLift && (dow===1||dow===3)) ? {i:"moon", t:"Recovery week", d:"No lifting this week. Trail Prep 1 is fine if you want to move."}
       : dow===0 ? {i: isRaceDay?"flag":"run", t: isRaceDay?"Race day":"Long run", d: (isRaceDay ? "Race day. Good luck." : "The key run of the week. Hike the steep climbs.")}
       : dow===4 ? {i:"moon", t:"Rest or ankle routine", d:"10 minutes, optional."}
@@ -609,12 +674,14 @@ function renderPlan(){
   });
   v.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">
     <div class="card"><h2>Every week</h2><div class="week7">${week7}</div></div>
+    <div class="card"><h2>Race week checklists</h2><p class="note">Each one shows on the Today tab during its race week. You can tick items here too.</p><div id="rcPlan" style="display:flex;flex-direction:column;gap:12px"></div></div>
     <div class="card"><h2>Principles</h2><p class="note">The ideas behind this plan, in short, from Jay Dicharry's <i>Running Rewired</i> (2017).</p>
       <blockquote class="quote">“Variety and repetition are the building blocks of motor learning.”</blockquote>
       <ul class="principles">${PRINCIPLES.map(([t,d])=>`<li><b>${t}</b><span class="note">${d}</span></li>`).join("")}</ul>
       <blockquote class="quote">“practice › plasticity › growth = rewired for success”</blockquote></div>
     <div class="card"><h2>22 weeks to Jablanik</h2><div class="tl">${rows}</div>
     <div class="callout">${ico("info")}<span>Make it harder in this order: 4 s lowering, 2 s pause, up to 12 reps, then a 20–24 kg bell (needed by 28 Dec).</span></div></div></div>`;
+  const rcp = v.querySelector("#rcPlan"); RACE_WEEKS.forEach(rw=>rcp.appendChild(renderRaceCheck(rw, -1)));
 }
 
 function backupBar(v){
@@ -642,7 +709,7 @@ function backupBar(v){
 }
 function renderHistory(){
   const v = document.getElementById("view");
-  const keys = Object.keys(logs).sort().reverse();
+  const keys = Object.keys(logs).filter(k=>/_[AB]$/.test(k)).sort().reverse();
   if(!keys.length){ v.innerHTML = `<div class="card empty"><div class="big">${ico("history")}</div><h2>No sessions yet</h2><p class="muted">Log your first session on the Today tab. Saved sessions show up here, newest first.</p></div>`; backupBar(v); return; }
   v.innerHTML = `<h2>${keys.length} session${keys.length===1?"":"s"} logged</h2><div class="hist">${keys.map(k=>{
     const l = logs[k]; const ex = Object.values(l.ex||{});
