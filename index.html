@@ -711,7 +711,7 @@ function renderToday(){
       <button id="segAuto" aria-pressed="${!selSession}">Day's plan</button>
       <label class="pickwrap" aria-pressed="${!!selSession}"><span class="sr">Other workout</span><select id="segPick">
         <option value="">Other workout…</option>
-        ${WORKOUT_ORDER.map(id=>`<option value="${id}" ${selSession===id?"selected":""}>${WORKOUTS[id].num}. ${WORKOUTS[id].name}</option>`).join("")}
+        ${WORKOUT_ORDER.map(id=>`<option value="${id}" ${selSession===id?"selected":""}>${WORKOUTS[id].kind==="ss"?"":WORKOUTS[id].num+". "}${WORKOUTS[id].name}</option>`).join("")}
         ${selSession && !WORKOUTS[selSession] ? `<option value="${esc(selSession)}" selected>Session ${esc(selSession)} (old plan)</option>` : ""}
       </select></label></div></div>`);
   v.appendChild(top);
@@ -872,7 +872,7 @@ function renderPlan(){
     <div class="card"><h2>Every week</h2><div class="week7">${week7}</div></div>
     <div class="card"><h2>The workouts</h2><p class="note">Precision circuits and power workouts from Jay Dicharry's <i>Running Rewired</i>, set up for your kettlebell, bands and stairs. Simple & Sinister from Pavel Tsatsouline's book. The Today tab picks the right one each day.</p>
       <div>${WORKOUT_ORDER.map(id=>{ const wk=WORKOUTS[id]; const items=[...(wk.pre||[]),...(wk.circuit||[]),...(wk.post||[]),...(wk.items||[])];
-        return `<details class="fuelrace"><summary><span><b>${wk.num}. ${wk.name}</b> <span class="note">· ${KIND_LABEL[wk.kind].replace(" workout","").replace("Kettlebell practice","Kettlebell")} · ${wk.min}${wk.rounds?` · ${wk.rounds} rounds`:""}</span></span>${ico("right","sm")}</summary><ul>${items.map(([eid,sets,reps])=>`<li>${EX[eid].name}, ${sets>1&&!wk.rounds?sets+" × ":""}${reps}${EX[eid].swap?' <span class="note">(home version)</span>':""}</li>`).join("")}</ul></details>`; }).join("")}</div>
+        return `<details class="fuelrace"><summary><span><b>${wk.kind==="ss"?"":wk.num+". "}${wk.name}</b> <span class="note">· ${KIND_LABEL[wk.kind].replace(" workout","").replace("Kettlebell practice","Kettlebell")} · ${wk.min}${wk.rounds?` · ${wk.rounds} rounds`:""}</span></span>${ico("right","sm")}</summary><ul>${items.map(([eid,sets,reps])=>`<li>${EX[eid].name}, ${sets>1&&!wk.rounds?sets+" × ":""}${reps}${EX[eid].swap?' <span class="note">(home version)</span>':""}</li>`).join("")}</ul></details>`; }).join("")}</div>
       <p class="note">Left out: the hang spine twist in Power A, which needs a pull-up bar.</p></div>
     <div class="card"><h2>Race week checklists</h2><p class="note">Each one shows on the Today tab during its race week. You can tick items here too.</p><div id="rcPlan" style="display:flex;flex-direction:column;gap:12px"></div></div>
     <div class="card"><h2>${ico("fuel","sm")} Fueling</h2><p class="note">How to eat for this training, in short, from Matt Fitzgerald's <i>The Endurance Diet</i> (2016).</p>
@@ -923,7 +923,7 @@ function renderHistory(){
     const doneSets = ex.reduce((a,e)=>a+(e.done||[]).filter(Boolean).length,0);
     const d = new Date(k.slice(0,10)+"T00:00:00");
     return `<button class="hitem" data-key="${esc(k)}"><span class="date"><b>${d.getDate()}</b><span>${d.toLocaleDateString("en-GB",{month:"short"})}</span></span>
-      <span class="what"><b>${WORKOUTS[l.session]?esc(WORKOUTS[l.session].num+". "+WORKOUTS[l.session].name):"Session "+esc(l.session)+" (old plan)"} <span class="muted" style="font-weight:500">· ${d.toLocaleDateString("en-GB",{weekday:"short"})}</span></b><span class="note">${esc(l.phase||"")}${l.note?" · "+esc(l.note):""}</span></span>
+      <span class="what"><b>${WORKOUTS[l.session]?esc((WORKOUTS[l.session].kind==="ss"?"":WORKOUTS[l.session].num+". ")+WORKOUTS[l.session].name):"Session "+esc(l.session)+" (old plan)"} <span class="muted" style="font-weight:500">· ${d.toLocaleDateString("en-GB",{weekday:"short"})}</span></b><span class="note">${esc(l.phase||"")}${l.note?" · "+esc(l.note):""}</span></span>
       <span class="right num">${doneSets} ${/^P/.test(l.session)?"ticks":"sets"}${ico("right","sm")}</span></button>`;
   }).join("")}</div>`;
   v.querySelectorAll(".hitem").forEach(b=>b.onclick=()=>{
