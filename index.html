@@ -313,18 +313,18 @@ const RACES = [
 // Precision workouts 1-3 (15-20 min), performance workouts 7-10, power workouts 13-14 (about 45 min).
 // Every fourth week: precision only. Six weeks before Jablanik: power workouts. Last 11-14 days: half volume.
 const PHASES = [
-  {w:[1,3], name:"Build", kind:"build", note:"Monday precision workout, Wednesday performance workout. Learn each move before adding effort."},
-  {w:[4,4], name:"Recovery", kind:"rec", note:"Precision workout on Monday only."},
-  {w:[5,7], name:"Build", kind:"build", note:"Monday precision, Wednesday performance. Go as heavy as perfect form allows."},
-  {w:[8,8], name:"Recovery", kind:"rec", note:"Precision workout on Monday only."},
-  {w:[9,11], name:"Build", kind:"build", note:"Monday precision, Wednesday performance."},
-  {w:[12,12], name:"Recovery", kind:"rec", note:"Precision workout on Monday only."},
-  {w:[13,14], name:"Build", kind:"build", note:"Monday precision, Wednesday performance. Divča is a tune-up race."},
-  {w:[15,15], name:"Divča race week", kind:"race", note:"Precision workout on Monday only. Race Sunday 7 March."},
-  {w:[16,16], name:"Recovery", kind:"rec", note:"Precision workout on Monday only."},
-  {w:[17,19], name:"Power", kind:"power", note:"Six weeks to Jablanik: precision Monday and before Friday's run, power workout Wednesday."},
-  {w:[20,20], name:"Recovery", kind:"rec", note:"Precision workout on Monday only."},
-  {w:[21,21], name:"Taper", kind:"power", half:true, note:"Power workout at half volume. Keep the speed, cut the sets."},
+  {w:[1,3], name:"Build", kind:"build", note:"Monday precision circuit, Wednesday and Saturday Simple & Sinister. Two-arm swings only while you learn."},
+  {w:[4,4], name:"Recovery", kind:"rec", note:"Monday precision circuit and Wednesday S&S. No Saturday session."},
+  {w:[5,7], name:"Build", kind:"build", note:"Monday precision, Wednesday and Saturday S&S. Move to one-arm swings when they feel solid."},
+  {w:[8,8], name:"Recovery", kind:"rec", note:"Monday precision and Wednesday S&S only."},
+  {w:[9,11], name:"Build", kind:"build", note:"Monday precision, Wednesday and Saturday S&S. Go up a bell when 10 × 10 feels easy."},
+  {w:[12,12], name:"Recovery", kind:"rec", note:"Monday precision and Wednesday S&S only."},
+  {w:[13,14], name:"Build", kind:"build", note:"Monday precision, Wednesday and Saturday S&S. Divča is a tune-up race."},
+  {w:[15,15], name:"Divča race week", kind:"race", note:"Precision circuit on Monday only. Race Sunday 7 March."},
+  {w:[16,16], name:"Recovery", kind:"rec", note:"Monday precision and Wednesday S&S only."},
+  {w:[17,19], name:"Power", kind:"power", note:"Six weeks to Jablanik: Running Rewired power workout on Wednesday, S&S on Saturday."},
+  {w:[20,20], name:"Recovery", kind:"rec", note:"Monday precision and Wednesday S&S only."},
+  {w:[21,21], name:"Taper", kind:"power", half:true, note:"Power workout at half volume. Keep the speed, cut the sets. S&S on Saturday."},
   {w:[22,22], name:"Jablanik race week", kind:"race", half:true, note:"Power workout at half volume on Monday, nothing after. Race Sunday 25 April."}
 ];
 // Exercise library. kg: logs a weight. swap: how the home version differs from the book.
@@ -374,6 +374,13 @@ const EX = {
   tucktwist:{name:"Plank tuck twist", how:"High plank with feet on a towel on a smooth floor. Tuck the knees under and twist side to side. 30 s on, 30 s off.", swap:"Book: shins on a Swiss ball."},
   pushpress:{name:"Kettlebell push press", kg:true, how:"Split stance, bell at the shoulder. Dip and jump so the drive sends the bell overhead, switching feet in the air. Light and fast.", swap:"Book: dumbbells. At home: one bell, switch hands each set."},
   kbdl:{name:"Kneeling banded deadlift", how:"Band tied low behind you, round your waist. Kneeling, let it pull the hips back to the heels, then drive them forward. No arching."},
+  pry:{name:"Prying goblet squat", kg:true, how:"Barefoot, bell by the horns. Sit back and down between the knees, heels down, elbows inside the knees. Pry the knees apart and breathe for a few breaths at the bottom."},
+  bridge:{name:"Hip bridge", how:"On your back, a shoe squeezed between the knees. Lift the hips as high as you can and hold 3 s, still pushing higher. Down, short rest."},
+  halo:{name:"Halo", kg:true, how:"Bell upside down by the horns, knees locked, glutes and abs tight. Circle it slowly round your head, shoulders down. Both directions."},
+  ssswing:{name:"Swings", kg:true, how:"Explosive hip snap, bell to chest height. Start the next set only when you can talk in short sentences again. One-arm sets alternate hands; every second or third session, do two-arm swings instead. While you learn, two-arm only."},
+  getup:{name:"Get-ups", kg:true, how:"One slow, clean rep at a time, alternating sides. If it gets shaky, stop at the stage you still control."},
+  ninety:{name:"90/90 stretch", how:"Sit with the front leg bent 90° in front and the back leg 90° to the side. Chest proud, hinge forward from the hips over the front knee. Breathe and relax. Both sides."},
+  qlstraddle:{name:"QL straddle", how:"Sit in a straddle, reach one arm overhead and lean the other way along the floor to stretch the side of your back. Both sides."},
   backlunge:{name:"Rear-foot lunge", how:"Back foot on a stair behind you. Drop into a lunge with the front shin vertical, then stand."}
 };
 // [id, sets, reps] or [id, sets, reps, note]. A workout has items, or pre / rounds+circuit / post.
@@ -385,11 +392,12 @@ const WORKOUTS = {
   W8:{name:"Single-leg focus", kind:"performance", num:8, min:"45 min", items:[["mbtwist",1,"80"],["sideplank",1,"25 per side"],["longarm",1,"20 per side"],["donkey",1,"2 min"],["row",2,"10"],["slrdl",3,"8 per side"],["splitsquat",3,"8 per side"],["swing",3,"12"],["hipthrust",3,"8"],["archer",2,"8 per side"],["waiter",2,"30 s per side"]]},
   W9:{name:"Horizontal force", kind:"performance", num:9, min:"45 min", items:[["longarm",1,"20 per side"],["thread",1,"20 per side"],["rdl",3,"8"],["splitbox",1,"10 per leg"],["swing",3,"8"],["archer",2,"8 per side"],["slpress",2,"8 per side"],["farmer",3,"40 s"],["hipthrust",3,"8"]]},
   W10:{name:"Vertical force", kind:"performance", num:10, min:"45 min", items:[["mbtwist",1,"80"],["kbsquat",1,"12"],["reachout",1,"20"],["bear",1,"30 steps each way"],["splitsquat",1,"10 per leg"],["squat",3,"8"],["row",2,"12"],["burpee",1,"8"],["slrdl",2,"8 per side"],["boxjump",3,"5"],["carry",4,"30 s per side"],["curls",3,"10"]]},
+  SS:{name:"Simple & Sinister", kind:"ss", num:"S&S", min:"about 30 min", rounds:3, labels:{circuit:"Warm-up, 3 times through", main:"Swings, then get-ups", post:"Stretches, now or before bed"}, circuit:[["pry",3,"a few breaths at the bottom"],["bridge",3,"5, with 3 s holds"],["halo",3,"5 each way"]], main:[["ssswing",10,"10"],["getup",10,"1, switch sides each rep"]], post:[["ninety",1,"1–3 sets per side"],["qlstraddle",1,"1–3 sets per side"]]},
   W13:{name:"Power A", kind:"power", num:13, min:"45 min", items:[["longarm",1,"20 per side"],["tucktwist",3,"30 s"],["boxjump",3,"4"],["splitbox",1,"5 per side"],["rdl",3,"5"],["pushpress",3,"4 per leg"],["hipthrust",3,"6"],["pushup",3,"6"],["twisted",1,"10 per leg"]]},
   W14:{name:"Power B", kind:"power", num:14, min:"45 min", items:[["scoots",3,"10"],["rainbow",1,"5 per side"],["hipcircle",1,"5 per side"],["kbdl",1,"30"],["drivethru",1,"8 per side"],["pushpress",3,"5 per leg"],["squat",5,"5, light and fast","Complex: 5 fast squats, rest 30 s, then the jumps below. 5 rounds."],["boxjump",5,"3","Rest 90 s after the jumps, then back to the squats."],["swing",3,"6"],["burpee",1,"6"],["backlunge",1,"8 per leg"]]}
 };
-const KIND_LABEL = {precision:"Precision workout", performance:"Performance workout", power:"Power workout"};
-const WORKOUT_ORDER = ["P1","P2","P3","W7","W8","W9","W10","W13","W14"];
+const KIND_LABEL = {precision:"Precision workout", performance:"Performance workout", power:"Power workout", ss:"Kettlebell practice"};
+const WORKOUT_ORDER = ["P1","P2","P3","SS","W13","W14"];
 // Demo videos (YouTube, checked embeddable 23 Nov 2026). Loaded only when tapped, via youtube-nocookie.
 const DEMOS = {"rfess": {"id": "iANV_6_2N_o", "by": "Horton Barbell"}, "slrdl": {"id": "9inxLLbsQPw", "by": "Zehring Physical Therapy"}, "swing": {"id": "yeB_J0rqc5Q", "by": "Cavemantraining"}, "hipthrust": {"id": "D2nNU3FonZE", "by": "Rehab My Patient"}, "stepdown": {"id": "Ig_Qo-GKjRc", "by": "MyPhysioSays"}, "calf": {"id": "3g5Mb3Y9sFU", "by": "Perfect Balance Clinic"}, "copen": {"id": "nhGK-DxiGBE", "by": "Physio Plus Fitness"}, "stepup": {"id": "W_iyzcfJbOk", "by": "The Fitness Academy"}, "latlunge": {"id": "AotXnGBys6o", "by": "Rehab My Patient"}, "spanish": {"id": "-ksofnvkohI", "by": "Michael Braccio"}, "tke": {"id": "siJKZ-c_P44", "by": "Balance In Motion"}, "bkcalf": {"id": "-XeTMSjpkCE", "by": "Mathew Hawkes"}, "tib": {"id": "lBCRdjdWiTI", "by": "Balance In Motion"}, "carry": {"id": "Q1GjhRDAil0", "by": "Rehab My Patient"}, "pogo": {"id": "hjprPAnfqoQ", "by": "Drs. Mike & Kelly Swann"}, "splitjump": {"id": "m0IrF39BxI0", "by": "SKLZ"}, "stairbound": {"id": "swKfVF81dmY", "by": "Stronger Runner"}, "lunge": {"id": "oV97EckMQlo", "by": "OPEX Fitness"}};
 const PRINCIPLES = [
@@ -474,7 +482,7 @@ function fuelTip(d){
   if(dow===1||dow===3){ const sess = autoSession(d);
     if(!sess) return "Light day. Keep eating to hunger. Recovery is when training turns into fitness.";
     return sess[0]==="P" ? "Precision day. Normal carb-centred meals. Nothing special needed for a 20-minute circuit." : "Lifting day. Normal carb-centred meals, water during the session. No sports drink needed."; }
-  if(dow===6) return "Rest day. A carb-centred dinner sets up tomorrow's long run.";
+  if(dow===6) return autoSession(d) ? "S&S day. A carb-centred dinner sets up tomorrow's long run." : "Rest day. A carb-centred dinner sets up tomorrow's long run.";
   return "Rest day. Still eat to hunger. Rest days rebuild what training used.";
 }
 let foodSaveTimer=null;
@@ -551,14 +559,14 @@ function firstNum(s){ const m = String(s||"").match(/\d+(\.\d+)?/); return m ? m
 
 function prescription(session, w){
   const wk = WORKOUTS[session]; if(!wk) return null;
-  const p = phaseOf(w); const half = !!(p && p.half && wk.kind!=="precision");
+  const p = phaseOf(w); const half = !!(p && p.half && (wk.kind==="power"||wk.kind==="performance"));
   const mk = (it, part)=>{ const [id, sets, reps, note] = it; const e = EX[id];
     const isNote = note && note.length>2; const sfx = (!isNote && note) ? note : "";
     const n = half ? Math.max(1, Math.ceil(sets/2)) : sets;
     return {...e, id:id+sfx, base:id, sets:n, reps, noKg:!e.kg, part, note:isNote?note:""}; };
   let list = [];
   if(wk.items) list = wk.items.map(it=>mk(it,"main"));
-  else list = [...(wk.pre||[]).map(it=>mk(it,"pre")), ...wk.circuit.map(it=>mk(it,"circuit")), ...(wk.post||[]).map(it=>mk(it,"post"))];
+  else list = [...(wk.pre||[]).map(it=>mk(it,"pre")), ...wk.circuit.map(it=>mk(it,"circuit")), ...(wk.main||[]).map(it=>mk(it,"main")), ...(wk.post||[]).map(it=>mk(it,"post"))];
   return {workout:wk, half, list};
 }
 
@@ -638,17 +646,15 @@ let selSession = null; // workout id (P1..W14) or null for the day's plan
 let draft = null; // {key, ex:{id:{kg:[],reps:[],done:[]}}, note}
 
 const RECOVERY = [4,8,12,16,20];
-function perfIndexBefore(w){ let n=0; for(let i=1;i<w;i++){ const p=phaseOf(i); if(p && p.kind==="build") n++; } return n; }
 function autoSession(d){
   const dow = d.getDay(), w = weekOf(d), p = phaseOf(w); if(!p) return null;
-  const prec = k => "P"+(((w-1+k)%3)+1);
-  if(dow===1){ if(p.kind==="race" && p.half) return "W13"; return prec(0); }
+  if(dow===1){ if(p.kind==="race" && p.half) return "W13"; return "P"+(((w-1)%3)+1); }
   if(dow===3){
-    if(p.kind==="build") return "W"+(7+perfIndexBefore(w)%4);
+    if(p.kind==="build" || p.kind==="rec") return "SS";
     if(p.kind==="power") return ({17:"W13",18:"W14",19:"W13",21:"W14"})[w] || "W13";
     return null;
   }
-  if(dow===5 && p.kind==="power") return prec(1);
+  if(dow===6 && (p.kind==="build" || p.kind==="power")) return "SS";
   return null;
 }
 function lastFor(exId, beforeKey){
@@ -747,13 +753,15 @@ function renderToday(){
   }
   const total = rx.list.reduce((a,x)=>a+x.sets,0);
 
-  const head = el(`<div class="sesshead"><div class="line"><h2>${esc(wk.name)} <span class="muted" style="font-weight:600;font-size:17px">${KIND_LABEL[wk.kind]} ${wk.num}</span></h2>
+  const head = el(`<div class="sesshead"><div class="line"><h2>${esc(wk.name)} <span class="muted" style="font-weight:600;font-size:17px">${KIND_LABEL[wk.kind]}${wk.kind==="ss"?"":" "+wk.num}</span></h2>
       <span class="count num" id="progCount" aria-live="polite"></span></div>
     <div class="bar" role="progressbar" aria-label="Sets done" aria-valuemin="0" aria-valuemax="${total}" id="progBar"><span></span></div></div>`);
   v.appendChild(head);
   if(rx.half) v.appendChild(el(`<div class="callout">${ico("alert")}<span>${p.name}: half volume, the book's taper for the last 11–14 days before a peak race. Keep the speed.</span></div>`));
   v.appendChild(el(`<details class="prep"><summary><span class="row" style="gap:10px">${ico("warm")}<span>How to do it <span class="note" style="display:block;font-weight:500">${wk.min}${wk.rounds?` · ${wk.rounds} rounds`:""}</span></span></span>${ico("right","chev")}</summary>
-    <div class="body">${wk.kind==="precision"
+    <div class="body">${wk.kind==="ss"
+      ? `<p>From Pavel Tsatsouline's <i>Kettlebell Simple & Sinister</i>. Practice, not a workout: every swing explosive, every get-up clean.</p><p>Rest between sets until you can speak in short sentences. Same sets and reps every time; progress only by weight, when it feels easy.</p><p class="note">The book starts men on 16 kg for get-ups and 24 kg for swings. Learn on 14 kg, then go heavier.</p>`
+      : wk.kind==="precision"
       ? `<p>Practice, not a workout: slow, precise moves through the full range. Rest 30–45 s between exercises.</p>${wk.rounds?`<p>Go through the round list ${wk.rounds} times and tick each exercise once per round.${wk.pre?" Do the start and finish moves once.":""}</p>`:""}<p class="note">Best done just before a run, as a warm-up.</p>`
       : `<p>Go as heavy as you can with perfect form. If your form slips, drop the weight. With 14 kg, slow the lowering to 3–4 s instead.</p><p>Rest about 90 s between the main sets. If a move is new, do fewer sets the first time.</p><p class="note">Keep your hard runs 48 hours away from this workout. Easy running on sore legs is fine.</p>`}</div></details>`));
 
@@ -768,7 +776,7 @@ function renderToday(){
 
   let lastPart = null;
   rx.list.forEach(x=>{
-    if(wk.rounds && x.part!==lastPart){ lastPart = x.part; list.appendChild(el(`<div class="eyebrow" style="margin-top:4px">${x.part==="pre"?"Start, once":x.part==="post"?"Finish, once":`Rounds: ${wk.rounds} times through`}</div>`)); }
+    if(wk.rounds && x.part!==lastPart){ lastPart = x.part; list.appendChild(el(`<div class="eyebrow" style="margin-top:4px">${(wk.labels&&wk.labels[x.part]) || (x.part==="pre"?"Start, once":x.part==="post"?"Finish, once":`Rounds: ${wk.rounds} times through`)}</div>`)); }
     const extra = 0;
     const n = x.sets;
     const e = draft.ex[x.id] || (draft.ex[x.id] = {name:x.name, kg:[], reps:[], done:[]});
@@ -846,7 +854,7 @@ function renderToday(){
 function renderPlan(){
   const v = document.getElementById("view");
   const cw = weekOf(today);
-  const days = [["Mon","Precision","k-str"],["Tue","Speed",""],["Wed","Perform­ance","k-str"],["Thu","Rest",""],["Fri","Speed",""],["Sat","Rest",""],["Sun","Long",""]];
+  const days = [["Mon","Precision","k-str"],["Tue","Speed",""],["Wed","S&S","k-str"],["Thu","Rest",""],["Fri","Speed",""],["Sat","S&S","k-str"],["Sun","Long",""]];
   const tdow = (today.getDay()+6)%7;
   const week7 = days.map((d,i)=>`<div class="${d[2]} ${i===tdow?"is-today":""}"><span class="muted">${d[0]}</span><b>${d[1]}</b></div>`).join("");
   let rows = "";
@@ -862,10 +870,10 @@ function renderPlan(){
   });
   v.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">
     <div class="card"><h2>Every week</h2><div class="week7">${week7}</div></div>
-    <div class="card"><h2>The workouts</h2><p class="note">All from Jay Dicharry's <i>Running Rewired</i>, set up for your kettlebell, bands and stairs. The Today tab picks the right one each day.</p>
+    <div class="card"><h2>The workouts</h2><p class="note">Precision circuits and power workouts from Jay Dicharry's <i>Running Rewired</i>, set up for your kettlebell, bands and stairs. Simple & Sinister from Pavel Tsatsouline's book. The Today tab picks the right one each day.</p>
       <div>${WORKOUT_ORDER.map(id=>{ const wk=WORKOUTS[id]; const items=[...(wk.pre||[]),...(wk.circuit||[]),...(wk.post||[]),...(wk.items||[])];
-        return `<details class="fuelrace"><summary><span><b>${wk.num}. ${wk.name}</b> <span class="note">· ${KIND_LABEL[wk.kind].replace(" workout","")} · ${wk.min}${wk.rounds?` · ${wk.rounds} rounds`:""}</span></span>${ico("right","sm")}</summary><ul>${items.map(([eid,sets,reps])=>`<li>${EX[eid].name}, ${sets>1&&!wk.rounds?sets+" × ":""}${reps}${EX[eid].swap?' <span class="note">(home version)</span>':""}</li>`).join("")}</ul></details>`; }).join("")}</div>
-      <p class="note">Left out: the hang spine twist in Workouts 9 and 13, which needs a pull-up bar.</p></div>
+        return `<details class="fuelrace"><summary><span><b>${wk.num}. ${wk.name}</b> <span class="note">· ${KIND_LABEL[wk.kind].replace(" workout","").replace("Kettlebell practice","Kettlebell")} · ${wk.min}${wk.rounds?` · ${wk.rounds} rounds`:""}</span></span>${ico("right","sm")}</summary><ul>${items.map(([eid,sets,reps])=>`<li>${EX[eid].name}, ${sets>1&&!wk.rounds?sets+" × ":""}${reps}${EX[eid].swap?' <span class="note">(home version)</span>':""}</li>`).join("")}</ul></details>`; }).join("")}</div>
+      <p class="note">Left out: the hang spine twist in Power A, which needs a pull-up bar.</p></div>
     <div class="card"><h2>Race week checklists</h2><p class="note">Each one shows on the Today tab during its race week. You can tick items here too.</p><div id="rcPlan" style="display:flex;flex-direction:column;gap:12px"></div></div>
     <div class="card"><h2>${ico("fuel","sm")} Fueling</h2><p class="note">How to eat for this training, in short, from Matt Fitzgerald's <i>The Endurance Diet</i> (2016).</p>
       <ul class="principles">${FUEL_HABITS.map(([t,d])=>`<li><b>${t}</b><span class="note">${d}</span></li>`).join("")}</ul>
