@@ -125,12 +125,25 @@ details.prep summary{list-style:none;display:flex;align-items:center;justify-con
 details.prep summary::-webkit-details-marker{display:none}
 details.prep summary .chev{transition:transform .2s}
 details.prep[open] summary .chev{transform:rotate(90deg)}
+details.rcday{border-top:1px solid var(--line)}
+details.rcday summary{list-style:none;display:flex;justify-content:space-between;align-items:center;padding:10px 0;cursor:pointer;min-height:44px}
+details.rcday summary::-webkit-details-marker{display:none}
+.rclist{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-direction:column;gap:8px}
+.rclist li{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.rclist .chk{flex:none;width:32px;height:32px}
+.rclist li span{padding-top:5px}
 details.prep .body{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px}
 .ex{gap:10px}
 .ex.complete{border-color:var(--done)}
 .exhead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
 .rx{font-weight:600;font-size:14px;white-space:nowrap;padding:3px 8px;border-radius:8px;background:var(--sunk)}
 .how{font-size:14px;color:var(--muted)}
+.why{display:flex;gap:6px;align-items:flex-start;font-size:13px;color:var(--muted);font-style:italic}
+.why .icon{flex:none;margin-top:2px}
+.principles{display:flex;flex-direction:column;gap:12px;margin:0;padding:0;list-style:none}
+.principles li{display:flex;flex-direction:column;gap:2px}
+.principles b{font-family:var(--display);font-size:17px}
+.quote{border-left:3px solid var(--accent, currentColor);padding:4px 12px;margin:0;font-style:italic}
 .last{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--fg);font-weight:500}
 .last .icon{color:var(--muted)}
 .sets{display:grid;grid-template-columns:40px 1fr 1fr 48px;gap:8px;align-items:center}
@@ -249,42 +262,116 @@ const RACES = [
 ];
 const PHASES = [
   {w:[1,4], name:"Foundation", sets:3, reps:"8–10", rpe:"7", note:"Learn the moves with 14 kg, then add tempo and pauses."},
-  {w:[5,5], name:"Easy week", sets:2, reps:"8", rpe:"6", note:"Holidays: half volume, or just one session."},
-  {w:[6,9], name:"Strength", sets:4, reps:"6", rpe:"8", note:"Heavier bell for split squat, RDL and step-downs."},
-  {w:[10,13], name:"Power and trail", sets:3, reps:"5", rpe:"8", power:true, note:"Jumps first in Session A. Week 12 is lighter: 2 sets."},
-  {w:[14,14], name:"Lighter", sets:2, reps:"5", rpe:"7", note:"Both sessions, 2 sets, same weight."},
-  {w:[15,15], name:"Divča race week", sets:2, reps:"5", rpe:"5–6", onlyB:true, note:"Session B on Monday only, then ankle drills. Race Sunday 7 March."},
-  {w:[16,16], name:"Recovery", sets:2, reps:"8", rpe:"6", onlyB:true, note:"Session B at 2 sets. Skip A until legs feel normal."},
-  {w:[17,20], name:"Jablanik build", sets:3, reps:"6", rpe:"8", power:true, jablanik:true, note:"More downhill work: step-downs 4 × 8, walking lunges added."},
+  {w:[5,5], name:"Recovery", sets:0, reps:"–", rpe:"–", noLift:true, note:"Holidays: no lifting. Trail Prep before your runs only."},
+  {w:[6,8], name:"Strength", sets:4, reps:"6", rpe:"8", note:"Heavier bell for split squat, RDL, hip thrust and step-downs."},
+  {w:[9,9], name:"Recovery", sets:0, reps:"–", rpe:"–", noLift:true, note:"Drop Sessions A and B, keep Trail Prep."},
+  {w:[10,11], name:"Power and trail", sets:3, reps:"5", rpe:"8", power:true, note:"Jumps first in Session A, 6 weeks out from Divča."},
+  {w:[12,12], name:"Lighter", sets:2, reps:"5", rpe:"7", onlyA:true, note:"Session A only, no jumps."},
+  {w:[13,14], name:"Power and trail", sets:3, reps:"5", rpe:"8", power:true, note:"Week 14 at 2 sets."},
+  {w:[15,15], name:"Divča race week", sets:2, reps:"5", rpe:"5–6", onlyB:true, note:"Session B on Monday only, Trail Prep Tuesday. Race Sunday 7 March."},
+  {w:[16,16], name:"Recovery", sets:0, reps:"–", rpe:"–", noLift:true, note:"Trail Prep only until legs feel normal."},
+  {w:[17,19], name:"Jablanik build", sets:3, reps:"6", rpe:"8", power:true, jablanik:true, note:"Step-downs 4 × 8, walking lunges added. Jumps weekly, 6 weeks out."},
+  {w:[20,20], name:"Lighter", sets:2, reps:"6", rpe:"7", onlyA:true, jablanik:true, note:"Session A only."},
   {w:[21,21], name:"Taper", sets:2, reps:"5", rpe:"7", note:"Keep the weight, cut the sets."},
-  {w:[22,22], name:"Jablanik race week", sets:2, reps:"5", rpe:"5", onlyB:true, note:"Monday 19 April only, nothing after. Race Sunday 25 April."}
+  {w:[22,22], name:"Jablanik race week", sets:2, reps:"5", rpe:"5", onlyB:true, note:"Monday 19 April only, then Trail Prep Tuesday. Race Sunday 25 April."}
 ];
 const POWER = [
-  {id:"pogo", name:"Pogo hops", reps:"20", how:"Quick, stiff ankles, small hops.", acc:true},
-  {id:"boxjump", name:"Squat jump or jump onto a stair", reps:"5", how:"Step down, don't jump down.", acc:true},
-  {id:"bounds", name:"Lateral bounds", reps:"6 per side", how:"Stick each landing for 2 s.", acc:true}
+  {id:"pogo", name:"Pogo hops", reps:"20", sets:3, how:"Quick, stiff ankles, small hops.", acc:true, noKg:true, why:"Builds the spring: stiff ankles and short ground contact store and return energy."},
+  {id:"splitjump", name:"Split jump onto a stair", reps:"5 per leg", sets:3, how:"One foot on the stair, drive up, switch legs in the air. No double bounce.", acc:true, noKg:true, why:"Fast force from one leg into the ground, the way you push up a climb."},
+  {id:"stairbound", name:"Stair bounds", reps:"12 s", sets:5, how:"Both feet, up a flight of stairs, short ground contact. Rest 90 s.", acc:true, noKg:true, why:"Power with quick contacts. If you double-bounce, go back to one step at a time."}
 ];
 const A = [
-  {id:"rfess", name:"Goblet rear-foot elevated split squat", main:true, single:true, knee:true, how:"Bell at chest, back foot on the 2nd or 3rd stair, lower in 3 s."},
-  {id:"slrdl", name:"Single-leg RDL", main:true, single:true, how:"Bell in the hand opposite the standing leg."},
-  {id:"swing", name:"Kettlebell swing", reps:"15", how:"Hip snap, not a squat. Rest 60 s."},
-  {id:"stepdown", name:"Goblet eccentric step-down", main:true, single:true, knee:true, how:"One stair. Lower the free heel to the floor in 3 s."},
-  {id:"calf", name:"Single-leg calf raise, straight knee", reps:"12 per leg", single:true, how:"Off a stair, bell in one hand, 2 s up, 3 s down."},
-  {id:"copen", name:"Copenhagen plank", reps:"20 s per side", noKg:true, how:"Knee on a stair, lift hips."},
-  {id:"deadbug", name:"Dead bug", reps:"8 per side", noKg:true, how:"Lower back pressed to the floor."}
+  {id:"rfess", name:"Goblet rear-foot elevated split squat", main:true, single:true, knee:true, how:"Bell at chest, back foot on the 2nd or 3rd stair, lower in 3 s.", why:"Single-leg strength is running strength: every stride lands on one leg."},
+  {id:"slrdl", name:"Single-leg RDL", main:true, single:true, how:"Bell in the hand opposite the standing leg.", why:"Teaches the hip, not the knee or back, to control the landing leg."},
+  {id:"swing", name:"Kettlebell swing", reps:"12", how:"Hip snap, not a squat. Rest 90 s.", why:"Hips drive, the back stays still. That hinge is what pushes you forward."},
+  {id:"hipthrust", name:"Kettlebell hip thrust", main:true, how:"Shoulders on the bottom stair, bell on your hips, rise to a straight line, no higher.", why:"Strong glutes push you horizontally. Stop at a straight line, never arch the low back."},
+  {id:"stepdown", name:"Goblet eccentric step-down", main:true, single:true, knee:true, how:"One stair. Lower the free heel to the floor in 3 s.", why:"Downhills are slow, controlled lowering. This is that, in the hall."},
+  {id:"calf", name:"Single-leg calf raise, straight knee", reps:"12 per leg", single:true, how:"Off a stair, bell in one hand, 2 s up, 3 s down.", why:"The calf and Achilles are your spring. Full range, slow lowering."},
+  {id:"copen", name:"Copenhagen plank", reps:"20 s per side", noKg:true, how:"Knee on a stair, lift hips.", why:"Inner-thigh strength keeps the pelvis level on rough ground."}
 ];
-const LUNGE = {id:"lunge", name:"Goblet walking lunge", reps:"10 per leg", single:true, how:"Long controlled steps, left leg first."};
+const LUNGE = {id:"lunge", name:"Goblet walking lunge", reps:"10 per leg", single:true, how:"Long controlled steps, left leg first.", why:"Long, controlled steps for downhill legs late in the race."};
 const B = [
-  {id:"stepup", name:"Goblet step-up, two stairs", main:true, single:true, knee:true, how:"Drive through the top foot, no push from the back leg."},
-  {id:"latlunge", name:"Goblet lateral lunge", reps:"6 per side", single:true, how:"Sit back into one hip, other leg straight."},
-  {id:"spanish", name:"Spanish squat (band)", reps:"30–45 s", noKg:true, how:"Band round the railing and behind both knees, sit back, shins vertical."},
-  {id:"tke", name:"Band knee extension, left", reps:"15", noKg:true, how:"Band behind the left knee, straighten fully, squeeze the thigh."},
-  {id:"bkcalf", name:"Bent-knee single-leg calf raise", reps:"15 per leg", single:true, how:"Knee bent about 30°, bell in one hand."},
-  {id:"tib", name:"Tibialis raise", reps:"15", noKg:true, cap:2, how:"Back to the wall, heels 30 cm out, lift toes."},
-  {id:"balance", name:"Single-leg balance with reach", reps:"30 s per leg", noKg:true, how:"On a folded towel, reach forward and sideways."},
-  {id:"bandwalk", name:"Lateral band walk", reps:"12 steps each way", noKg:true, cap:2, how:"Band above knees, stay low."},
-  {id:"carry", name:"Suitcase carry", reps:"40 m per side", how:"Bell in one hand, stand tall, no lean."}
+  {id:"footscrew", name:"Foot screws", reps:"20", noKg:true, cap:1, how:"Hold the railing. Big toe down, rise an inch, twist the heels in and out.", why:"The big toe anchors the foot. A grounded toe keeps the arch and knee from collapsing."},
+  {id:"stepup", name:"Goblet step-up, two stairs", main:true, single:true, knee:true, how:"Drive through the top foot, no push from the back leg.", why:"Climbing strength. Push only with the top leg."},
+  {id:"latlunge", name:"Goblet lateral lunge", reps:"6 per side", single:true, how:"Sit back into one hip, other leg straight.", why:"Trails move sideways too. Strength in the side-to-side plane."},
+  {id:"spanish", name:"Spanish squat (band)", reps:"30–45 s", noKg:true, how:"Band round the railing and behind both knees, sit back, shins vertical.", why:"Loads the knee with the shin vertical, a gentle way to strengthen it."},
+  {id:"tke", name:"Band knee extension, left", reps:"15", noKg:true, how:"Band behind the left knee, straighten fully, squeeze the thigh.", why:"Wakes up the left quad's last few degrees of straightening."},
+  {id:"bkcalf", name:"Bent-knee single-leg calf raise", reps:"15 per leg", single:true, how:"Knee bent about 30°, bell in one hand.", why:"Bent-knee raises reach the soleus, which takes most of the load in each stride."},
+  {id:"tib", name:"Tibialis raise", reps:"15", noKg:true, cap:2, how:"Back to the wall, heels 30 cm out, lift toes.", why:"Shin strength for steep descents and toe clearance on roots."},
+  {id:"tippy", name:"Tippy twist", reps:"8 per leg", noKg:true, cap:2, how:"Balance on one leg, hinge forward, rotate the hips down and up. Big toe stays down.", why:"Balance with the hip rotating over a steady foot, the way you land on uneven ground."},
+  {id:"carry", name:"Suitcase carry", reps:"30 s per side", sets:4, how:"Bell in one hand, stand tall, no lean. Rest 45 s.", why:"Stay tall while loaded on one side, like a pole plant or a stumble."}
 ];
+const PRINCIPLES = [
+  ["Precision before load","Learn to move well with bodyweight and bands first, then add weight. That's why Trail Prep comes before your runs."],
+  ["Repeat, but vary","The same moves often, in rotating versions. Your body learns from both, so Trail Prep alternates between two circuits."],
+  ["Keep hard days apart","Hard runs and hard lifting go at least 48 hours apart. Easy running on sore legs is fine."],
+  ["Three weeks on, one lighter","Strength builds while you recover, so every fourth week drops the heavy sessions."],
+  ["Power near the race","Fast, light, explosive work belongs in the last 6 weeks before a key race."],
+  ["The big toe anchors the foot","Press the big toe down and turn the hip slightly out. The knee then stays over the foot, which matters for your left knee."],
+  ["Build a bigger spring","Running is bouncing. Stiff ankles and short ground contact return energy instead of wasting it."],
+  ["Hips drive, the back stays still","Hinge from the hips with a neutral spine in swings, deadlifts and hip thrusts."],
+  ["Base strength first","Newer lifters need about three months of basic strength before combining heavy lifts and jumps."]
+];
+// Race-week checklists. Ticks are saved in the log as logs["race-divca"] / logs["race-jablanik"].
+const RACE_WEEKS = [
+  {id:"divca", race:0, start:new Date(2027,2,1), intro:"15 km, 640 m+, in winter. Short and steep: grip and warmth matter more than food.", days:[
+    {t:"Mon 1 Mar", items:[["d1-b","Last strength session: Session B, light, 2 sets"],["d1-kit","Read the race's mandatory kit list on the official site"],["d1-start","Note start time, bib pickup and travel to Divčibare"]]},
+    {t:"Tue 2 Mar", items:[["d2-prep","Trail Prep 1, then 30 min easy with 4 × 20 s relaxed strides. No speed session"],["d2-shoes","Run in your race shoes and socks to check them"]]},
+    {t:"Wed 3 Mar", items:[["d3-run","Easy 30 min or rest. No lifting"],["d3-grip","Decide on grip: lugged shoes, and microspikes if the course is icy"],["d3-layers","Lay out layers: hat, gloves, buff, waterproof jacket"]]},
+    {t:"Thu 4 Mar", items:[["d4-rest","Rest or 20 min easy"],["d4-course","Study the 15 km profile: where the climbs are, where to hike, which descents may be icy"],["d4-weather","Check the forecast for Divčibare and plan layers for it"]]},
+    {t:"Fri 5 Mar", items:[["d5-run","20 min easy with a few strides"],["d5-food","Normal meals with a bit more carbohydrate. No new foods"],["d5-sleep","8 hours of sleep. Friday night counts more than Saturday"]]},
+    {t:"Sat 6 Mar", items:[["d6-shake","Rest or a 15 min shakeout"],["d6-pack","Pack: bib, pins, 1–2 gels, 500 ml soft flask, dry warm clothes for after"],["d6-dinner","Familiar dinner with rice or pasta, early"],["d6-bed","In bed early. Alarm set, kit by the door"]]},
+    {t:"Sun 7 Mar · Race", items:[["d7-bfast","Familiar breakfast 2–3 hours before the start"],["d7-warm","Warm up 10 min easy plus leg swings. Stay warm until the start"],["d7-pace","Start steady on the first climb, hike the steep parts"],["d7-after","Dry clothes and a warm drink straight after"]]}
+  ]},
+  {id:"jablanik", race:1, start:new Date(2027,3,19), intro:"34 km, 1800 m+. Long: fuelling, pacing and downhill legs decide it.", days:[
+    {t:"Mon 19 Apr", items:[["j1-b","Last strength session: Session B, light, 2 sets"],["j1-kit","Read the race's mandatory kit list on the official site and check every item"],["j1-start","Note start time, bib pickup, cut-off times and travel"]]},
+    {t:"Tue 20 Apr", items:[["j2-prep","Trail Prep 1, then 40 min easy with 4 × 20 s strides. No speed session"],["j2-pack","Run with the full race vest loaded, to check it doesn't bounce or rub"]]},
+    {t:"Wed 21 Apr", items:[["j3-run","Easy 30–40 min. No lifting"],["j3-shoes","Shoes and socks you've already done a 3-hour run in"],["j3-poles","Decide on poles, if allowed, and practise folding them"]]},
+    {t:"Thu 22 Apr", items:[["j4-rest","Rest or 20 min easy"],["j4-course","Study the 34 km profile and aid stations. Mark the long climbs to hike"],["j4-fuel","Plan fuel: about 60 g carbohydrate an hour from the first hour, and what you'll take at each aid station"]]},
+    {t:"Fri 23 Apr", items:[["j5-run","20 min easy with a few strides"],["j5-carbs","Carbohydrate-rich meals today and tomorrow. Nothing new"],["j5-sleep","8 hours of sleep. Friday night counts more than Saturday"],["j5-weather","Check the forecast and pack for rain and cold on the tops"]]},
+    {t:"Sat 24 Apr", items:[["j6-shake","Rest or a 15 min shakeout"],["j6-pack","Pack the vest: mandatory kit, gels or bars for 5–6 hours, 1–1.5 l of water, salt"],["j6-dinner","Familiar dinner, early"],["j6-bed","In bed early. Alarm set, kit by the door"]]},
+    {t:"Sun 25 Apr · Race", items:[["j7-bfast","Familiar breakfast 3 hours before the start"],["j7-pace","Start slower than feels right. Hike every steep climb"],["j7-eat","Eat every 30–40 min from the start, drink to thirst"],["j7-down","Save the legs for the last descents: short, quick steps"]]}
+  ]}
+];
+function raceWeekFor(d){ return RACE_WEEKS.find(r=>{ const a=r.start.getTime(), b=a+7*dayMs; return d.getTime()>=a && d.getTime()<b; }) || null; }
+let raceSaveTimer=null;
+function renderRaceCheck(rw, openDay){
+  const key = "race-"+rw.id;
+  const saved = logs[key] || {};
+  const checked = Object.assign({}, saved.checked||{});
+  const total = rw.days.reduce((a,d)=>a+d.items.length,0);
+  const count = () => rw.days.reduce((a,d)=>a+d.items.filter(i=>checked[i[0]]).length,0);
+  const r = RACES[rw.race];
+  const frag = el(`<div class="card racecheck"><div class="line" style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+      <h2>${ico("flag","sm")} ${r.short} race week</h2><span class="num note" data-rc-count>${count()} / ${total}</span></div>
+    <p class="note">${rw.intro}</p>
+    ${rw.days.map((d,di)=>{
+      const n = d.items.filter(i=>checked[i[0]]).length;
+      return `<details class="rcday" ${di===openDay?"open":""}><summary><b>${d.t}</b><span class="num note">${n}/${d.items.length}</span></summary>
+        <ul class="rclist">${d.items.map(([id,txt])=>`<li><button class="chk sm" data-rc="${id}" aria-pressed="${!!checked[id]}" aria-label="${esc(txt)}">${ico("check")}</button><span>${txt}</span></li>`).join("")}</ul></details>`;
+    }).join("")}
+    <p class="status" data-rc-msg role="status" aria-live="polite"></p></div>`);
+  const card = frag.firstElementChild;
+  card.querySelectorAll("[data-rc]").forEach(btn=>btn.onclick=()=>{
+    const id=btn.dataset.rc; checked[id]=!checked[id]; if(!checked[id]) delete checked[id];
+    btn.setAttribute("aria-pressed", String(!!checked[id]));
+    card.querySelector("[data-rc-count]").textContent = count()+" / "+total;
+    const det = btn.closest("details"); const items = det.querySelectorAll("[data-rc]");
+    det.querySelector("summary .note").textContent = [...items].filter(b=>b.getAttribute("aria-pressed")==="true").length+"/"+items.length;
+    logs[key] = {type:"race", race:rw.id, checked:{...checked}, savedAt:new Date().toISOString()}; lsSet("tsl-logs",logs);
+    clearTimeout(raceSaveTimer);
+    raceSaveTimer = setTimeout(async()=>{
+      const ok = await sync();
+      const m = card.querySelector("[data-rc-msg]"); if(m) m.textContent = ok ? "Saved and synced with goblin." : "Saved on this phone. It will sync when goblin is reachable.";
+    }, 700);
+  });
+  return frag;
+}
+// Trail Prep: Running Rewired-style precision circuits, 15 min before Tuesday and Friday runs. Not logged.
+const PREP = {
+  1: {title:"Trail Prep 1: feet and hips", items:["Foot screws × 20","Tippy twist × 8 per leg","Pigeon hip extension × 15 per side","Frog bridge × 25, soles together","Donkey toes, 4 × 30 s","Lateral hop over a rolled towel, 20 s"]},
+  2: {title:"Trail Prep 2: bands", items:["Long-arm band squat × 10 per side","Band drive-thru × 10 per leg","Banded hip drag × 15 per leg","Bear walk, 20 steps forward and back","Twisted warrior × 5 per side, per leg","Foot screws × 30"]}
+};
 const KNEE_DATES = ["2026-11-23","2026-12-21","2027-01-18","2027-02-15"];
 
 const pad = n => String(n).padStart(2,"0");
@@ -301,20 +388,20 @@ function firstNum(s){ const m = String(s||"").match(/\d+(\.\d+)?/); return m ? m
 
 function prescription(session, w){
   const p = phaseOf(w); if(!p) return null;
-  let sets = p.sets; if(w===12) sets = 2;
+  let sets = p.sets; if(w===14) sets = 2;
   let list = [];
   if(session==="A"){
-    if(p.power) list = list.concat(POWER.map(x=>({...x, sets:3})));
+    if(p.power && w!==14) list = list.concat(POWER.map(x=>({...x})));
     A.forEach(x=>{
-      let s = x.main ? sets : Math.min(sets, x.cap||3);
+      let s = x.main ? sets : (x.sets ? (sets<3 ? 2 : x.sets) : Math.min(sets, x.cap||3));
       let reps = x.reps || p.reps;
-      if(p.jablanik && x.id==="stepdown"){ s = 4; reps = "8"; }
+      if(p.jablanik && x.id==="stepdown" && sets>=3){ s = 4; reps = "8"; }
       list.push({...x, sets:s, reps: x.main ? reps+(x.single?" per leg":"") : reps});
     });
     if(p.jablanik) list.push({...LUNGE, sets:3});
   } else {
     B.forEach(x=>{
-      let s = x.main ? sets : Math.min(sets, x.cap||3);
+      let s = x.main ? sets : (x.sets ? (sets<3 ? 2 : x.sets) : Math.min(sets, x.cap||3));
       let reps = x.reps || p.reps;
       if(p.power && x.id==="stepup"){ reps = "6"; }
       list.push({...x, sets:s, reps: x.main ? reps+(x.single?" per leg":"") : reps,
@@ -383,7 +470,14 @@ let selDate = new Date(today);
 let selSession = null; // "A" | "B" | null (auto)
 let draft = null; // {key, ex:{id:{kg:[],reps:[],done:[]}}, note}
 
-function autoSession(d){ const dow = d.getDay(); return dow===1?"B":dow===3?"A":null; }
+function autoSession(d){
+  const dow = d.getDay(), p = phaseOf(weekOf(d));
+  if(p && p.noLift) return null;
+  if(p && p.onlyA && dow===1) return null;
+  if(p && p.onlyB && dow===3) return null;
+  return dow===1?"B":dow===3?"A":null;
+}
+function prepList(n){ const pr = PREP[n]; return `<div style="width:100%;display:flex;flex-direction:column;gap:8px;text-align:left"><div class="eyebrow">${pr.title} · 2 rounds, 15 min</div><ul>${pr.items.map(i=>`<li>${i}</li>`).join("")}</ul></div>`; }
 function lastFor(exId, beforeKey){
   const keys = Object.keys(logs).filter(k=>k<beforeKey).sort().reverse();
   for(const k of keys){ const e = logs[k].ex && logs[k].ex[exId]; if(e && (e.kg||[]).some(v=>v!==""&&v!=null)){ return {key:k, e}; } }
@@ -448,21 +542,26 @@ function renderToday(){
   v.querySelector("#segA").onclick=go(()=>{ selSession="A"; });
   v.querySelector("#segB").onclick=go(()=>{ selSession="B"; });
 
+  const rwk = raceWeekFor(selDate);
+  if(rwk) v.appendChild(renderRaceCheck(rwk, Math.round((selDate-rwk.start)/dayMs)));
   if(!p){ v.appendChild(el(`<div class="card"><p>${w<1?"The plan starts on Monday 23 November.":"The 22-week plan is done. Keep one strength session a week through the summer races."}</p></div>`)); return; }
 
   if(!session){
     const isRaceDay = RACES.some(r=>iso(r.date)===iso(selDate));
-    const what = dow===2||dow===5 ? {i:"run", t:"Speed run", d:"Run day. Strength waits until tomorrow or Wednesday."}
+    const what = (rwk && (dow===2||dow===5)) ? {i:"run", t:"Trail Prep, then easy run", d:"Race week: easy running only, with a few relaxed strides."}
+      : dow===2||dow===5 ? {i:"run", t:"Trail Prep, then speed run", d:"Do the 15-minute circuit below as your warm-up, then run."}
+      : (p.noLift && (dow===1||dow===3)) ? {i:"moon", t:"Recovery week", d:"No lifting this week. Trail Prep 1 is fine if you want to move."}
       : dow===0 ? {i: isRaceDay?"flag":"run", t: isRaceDay?"Race day":"Long run", d: (isRaceDay ? "Race day. Good luck." : "The key run of the week. Hike the steep climbs.")}
       : dow===4 ? {i:"moon", t:"Rest or ankle routine", d:"10 minutes, optional."}
       : {i:"moon", t:"Rest", d:"Easy walk and mobility. Fresh legs for Sunday."};
     v.appendChild(el(`<div class="card restday"><div class="big">${ico(what.i)}</div><h2>${what.t}</h2><p class="muted">${what.d}</p>
       ${dow===4||dow===6?`<div style="width:100%;display:flex;flex-direction:column;gap:8px"><div class="eyebrow">Ankle routine</div><ul><li>20 calf raises</li><li>20 tibialis raises</li><li>30 s single-leg balance per leg, eyes closed</li>${w>=10?"<li>20 pogo hops</li>":""}</ul></div>`:""}
+      ${dow===2?prepList(1):dow===5?prepList(2):(p.noLift && (dow===1||dow===3))?prepList(1):""}
       <p class="note">Want to lift anyway? Pick Session A or B above.</p></div>`));
     return;
   }
 
-  const rx = prescription(session, w);
+  const rx = p.noLift ? prescription(session, 1) : prescription(session, w);
   const key = iso(selDate)+"_"+session;
   if(!draft || draft.key!==key){
     const saved = logs[key];
@@ -475,13 +574,15 @@ function renderToday(){
       <span class="count num" id="progCount" aria-live="polite"></span></div>
     <div class="bar" role="progressbar" aria-label="Sets done" aria-valuemin="0" aria-valuemax="${total}" id="progBar"><span></span></div></div>`);
   v.appendChild(head);
-  if(p.onlyB && session==="A"){
-    v.appendChild(el(`<div class="callout">${ico("alert")}<span>${p.name}: the plan has Session B only this week.</span></div>`));
+  if((p.onlyB && session==="A") || (p.onlyA && session==="B") || p.noLift){
+    const msg = p.noLift ? "no lifting this week, Trail Prep only" : p.onlyB ? "the plan has Session B only this week" : "the plan has Session A only this week";
+    v.appendChild(el(`<div class="callout">${ico("alert")}<span>${p.name}: ${msg}.</span></div>`));
   }
   v.appendChild(el(`<details class="prep"><summary><span class="row" style="gap:10px">${ico("warm")}<span>Before you start <span class="note" style="display:block;font-weight:500">Warm-up 8 min · left leg first</span></span></span>${ico("right","chev")}</summary>
     <div class="body"><p class="note">${p.note} Target effort RPE ${p.rpe}.</p>
       <p><b>Warm-up, 8 min:</b> easy skipping, 10 leg swings each way, 10 glute bridges, 20 small ankle hops.</p>
-      <div class="callout">${ico("info")}<span>Left leg first on every single-leg move. Knee moves get one extra set on the left, marked <span class="side">L</span>.</span></div></div></details>`));
+      <div class="callout">${ico("info")}<span>Left leg first on every single-leg move. Knee moves get one extra set on the left, marked <span class="side">L</span>.</span></div>
+      <p class="note">Knee cue: keep the big toe pressed down and turn the hip slightly out, as if screwing the foot into the floor. The knee stays over the second toe.</p></div></details>`));
 
   const list = document.createElement("div"); list.style.cssText="display:flex;flex-direction:column;gap:12px";
   v.appendChild(list);
@@ -512,7 +613,7 @@ function renderToday(){
         <button class="chk" id="done-${x.id}-${i}" aria-pressed="${!!e.done[i]}" aria-label="Set ${i+1} done">${ico("check")}</button>`;
     }
     const block = el(`<section class="card ex" id="ex-${x.id}"><div class="exhead"><h3>${x.name}</h3><span class="rx num">${x.sets}${extra?"+1L":""} × ${x.reps}</span></div>
-      <p class="how">${x.how}</p>${prevTxt?`<p class="last">${ico("history","sm")}<span>${prevTxt}</span></p>`:""}<div class="sets">${rows}</div></section>`);
+      <p class="how">${x.how}</p>${x.why?`<p class="why">${ico("info","sm")}<span>${x.why}</span></p>`:""}${prevTxt?`<p class="last">${ico("history","sm")}<span>${prevTxt}</span></p>`:""}<div class="sets">${rows}</div></section>`);
     list.appendChild(block);
     const card = list.querySelector("#ex-"+x.id);
     const markCard = ()=>{ let all=true; for(let i=0;i<n;i++) if(!e.done[i]) all=false; card.classList.toggle("complete", all); };
@@ -557,7 +658,7 @@ function renderToday(){
 function renderPlan(){
   const v = document.getElementById("view");
   const cw = weekOf(today);
-  const days = [["Mon","B","k-str"],["Tue","Speed",""],["Wed","A","k-str"],["Thu","Rest",""],["Fri","Speed",""],["Sat","Rest",""],["Sun","Long",""]];
+  const days = [["Mon","B","k-str"],["Tue","Prep 1 + speed",""],["Wed","A","k-str"],["Thu","Rest",""],["Fri","Prep 2 + speed",""],["Sat","Rest",""],["Sun","Long",""]];
   const tdow = (today.getDay()+6)%7;
   const week7 = days.map((d,i)=>`<div class="${d[2]} ${i===tdow?"is-today":""}"><span class="muted">${d[0]}</span><b>${d[1]}</b></div>`).join("");
   let rows = "";
@@ -569,12 +670,18 @@ function renderPlan(){
     rows += `<div class="tlrow ${now?"now":""} ${past?"past":""} ${isRace?"race-row":""}"><div class="rail"><i></i></div>
       <div class="box"><div class="t"><b>${p.name}</b>${now?'<span class="badge accent">Now</span>':""}${isRace?`<span class="badge">${ico("flag","sm")}Race</span>`:""}</div>
       <div class="wk num">Week ${p.w[0]}${p.w[1]!==p.w[0]?"–"+p.w[1]:""} · ${s.toLocaleDateString("en-GB",{day:"numeric",month:"short"})} – ${e.toLocaleDateString("en-GB",{day:"numeric",month:"short"})}</div>
-      <p class="note" style="margin-top:4px"><span class="num" style="color:var(--fg);font-weight:600">${p.sets} × ${p.reps} · RPE ${p.rpe}.</span> ${p.note}</p></div></div>`;
+      <p class="note" style="margin-top:4px">${p.noLift?"":`<span class="num" style="color:var(--fg);font-weight:600">${p.sets} × ${p.reps} · RPE ${p.rpe}.</span> `}${p.note}</p></div></div>`;
   });
   v.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">
     <div class="card"><h2>Every week</h2><div class="week7">${week7}</div></div>
+    <div class="card"><h2>Race week checklists</h2><p class="note">Each one shows on the Today tab during its race week. You can tick items here too.</p><div id="rcPlan" style="display:flex;flex-direction:column;gap:12px"></div></div>
+    <div class="card"><h2>Principles</h2><p class="note">The ideas behind this plan, in short, from Jay Dicharry's <i>Running Rewired</i> (2017).</p>
+      <blockquote class="quote">“Variety and repetition are the building blocks of motor learning.”</blockquote>
+      <ul class="principles">${PRINCIPLES.map(([t,d])=>`<li><b>${t}</b><span class="note">${d}</span></li>`).join("")}</ul>
+      <blockquote class="quote">“practice › plasticity › growth = rewired for success”</blockquote></div>
     <div class="card"><h2>22 weeks to Jablanik</h2><div class="tl">${rows}</div>
     <div class="callout">${ico("info")}<span>Make it harder in this order: 4 s lowering, 2 s pause, up to 12 reps, then a 20–24 kg bell (needed by 28 Dec).</span></div></div></div>`;
+  const rcp = v.querySelector("#rcPlan"); RACE_WEEKS.forEach(rw=>rcp.appendChild(renderRaceCheck(rw, -1)));
 }
 
 function backupBar(v){
@@ -602,7 +709,7 @@ function backupBar(v){
 }
 function renderHistory(){
   const v = document.getElementById("view");
-  const keys = Object.keys(logs).sort().reverse();
+  const keys = Object.keys(logs).filter(k=>/_[AB]$/.test(k)).sort().reverse();
   if(!keys.length){ v.innerHTML = `<div class="card empty"><div class="big">${ico("history")}</div><h2>No sessions yet</h2><p class="muted">Log your first session on the Today tab. Saved sessions show up here, newest first.</p></div>`; backupBar(v); return; }
   v.innerHTML = `<h2>${keys.length} session${keys.length===1?"":"s"} logged</h2><div class="hist">${keys.map(k=>{
     const l = logs[k]; const ex = Object.values(l.ex||{});
