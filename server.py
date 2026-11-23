@@ -11,7 +11,8 @@ import json
 import os
 import shutil
 import threading
-from datetime import datetime
+import re
+from datetime import date, datetime
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -20,6 +21,60 @@ PORT = int(os.environ.get("TSL_PORT", "8787"))
 DATA = os.environ.get("TSL_DATA", os.path.join(HERE, "data.json"))
 MAX_BODY = 5 * 1024 * 1024
 LOCK = threading.Lock()
+
+# For /api/summary (goblin's home page). Keep in step with START and RACES in index.html.
+START = date(2026, 11, 23)
+WEEKS = 22
+RACES = [
+    {"name": "Divča Winter Trail", "date": "2027-03-07", "spec": "15 km · 640 m+"},
+    {"name": "Jablanik Trail", "date": "2027-04-25", "spec": "34 km · 1800 m+"},
+]
+SESSION_KEY = re.compile(r"^(\d{4}-\d\d-\d\d)_(A|B|P\d|SS|ME|W\d+)$")
+
+
+def session_name(sid):
+    if sid.startswith("P"):
+        return "Precision circuit"
+    if sid == "SS":
+        return "Simple & Sinister"
+    if sid == "ME":
+        return "Uphill strength"
+    if sid in ("W13", "W14"):
+        return "Power workout"
+    if sid.startswith("W"):
+        return "Performance workout"
+    return "Strength session"
+
+
+def summary(data, today=None):
+    """Counts only, no notes or weights: safe to show on goblin's home page."""
+    today = today or date.today()
+    week = (today - START).days // 7 + 1
+    week_start = START.toordinal() + (week - 1) * 7
+    total = sets = this_week = 0
+    last = None
+    for key, entry in data["logs"].items():
+        m = SESSION_KEY.match(key)
+        if not m or not isinstance(entry, dict):
+            continue
+        day = date.fromisoformat(m.group(1))
+        total += 1
+        sets += sum(sum(1 for d in (e.get("done") or []) if d)
+                    for e in (entry.get("ex") or {}).values() if isinstance(e, dict))
+        if week_start <= day.toordinal() < week_start + 7:
+            this_week += 1
+        if last is None or day.isoformat() > last["date"]:
+            last = {"date": day.isoformat(), "name": session_name(m.group(2))}
+    return {
+        "today": today.isoformat(),
+        "week": week if 1 <= week <= WEEKS else None,
+        "weeks": WEEKS,
+        "races": RACES,
+        "sessions": total,
+        "sessionsThisWeek": this_week,
+        "sets": sets,
+        "last": last,
+    }
 
 
 def load():
@@ -65,9 +120,11 @@ class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=HERE, **kwargs)
 
-    def _json(self, code, obj):
+    def _json(self, code, obj, cors=False):
         body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
         self.send_response(code)
+        if cors:
+            self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Length", str(len(body)))
@@ -85,6 +142,9 @@ class Handler(SimpleHTTPRequestHandler):
         if path == "/api/sync":
             with LOCK:
                 return self._json(200, load())
+        if path == "/api/summary":
+            with LOCK:
+                return self._json(200, summary(load()), cors=True)
         if path in ("/", "/index.html"):
             self.path = "/index.html"
             return super().do_GET()
