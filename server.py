@@ -46,6 +46,70 @@ def session_name(sid):
     return "Strength session"
 
 
+# Mirrors PHASES, ME_SESSION and autoSession() in index.html. Keep them in step.
+PHASE_KIND = {}
+for first, last, kind in [(1, 3, "build"), (4, 4, "rec"), (5, 7, "build"), (8, 8, "rec"), (9, 11, "build"),
+                          (12, 12, "rec"), (13, 14, "build"), (15, 15, "race"), (16, 16, "rec"),
+                          (17, 19, "power"), (20, 20, "rec"), (21, 21, "power"), (22, 22, "race")]:
+    for w in range(first, last + 1):
+        PHASE_KIND[w] = kind
+HALF_WEEKS = {21, 22}
+ME_WEEKS = {5, 6, 7, 9, 10, 11, 13, 14}
+RACE_DAYS = {r["date"] for r in RACES}
+
+
+def planned_session(day):
+    """The strength session the app plans for a day, or None (same rules as autoSession in index.html)."""
+    w = (day - START).days // 7 + 1
+    kind = PHASE_KIND.get(w)
+    if not kind:
+        return None
+    dow = day.isoweekday()  # Mon 1 .. Sun 7
+    if dow == 1:
+        if kind == "race" and w in HALF_WEEKS:
+            return "W13"
+        return "P%d" % ((w - 1) % 3 + 1)
+    if dow == 3:
+        if kind in ("build", "rec"):
+            return "SS"
+        if kind == "power":
+            return {17: "W13", 18: "W14", 19: "W13", 21: "W14"}.get(w, "W13")
+        return None
+    if dow == 6 and w in ME_WEEKS:
+        return "ME"
+    if dow == 6 and kind in ("build", "power"):
+        return "SS"
+    return None
+
+
+def short_name(sid):
+    return {"Precision circuit": "Precision", "Simple & Sinister": "S&S", "Uphill strength": "Uphill",
+            "Power workout": "Power", "Performance workout": "Strength"}.get(session_name(sid), "Strength")
+
+
+def day_card(day, logged):
+    """One day of the week strip: what's planned and whether a session was logged."""
+    sid = planned_session(day)
+    w = (day - START).days // 7 + 1
+    dow = day.isoweekday()
+    if day.isoformat() in RACE_DAYS:
+        kind, label = "race", "Race"
+    elif sid:
+        kind, label = "strength", short_name(sid)
+    elif dow == 2:
+        kind, label = "run", "Hills + speed" if 1 <= w <= 14 else "Speed"
+    elif dow == 5:
+        kind, label = "run", "Speed"
+    elif dow == 7:
+        kind, label = "run", "Long run"
+    else:
+        kind, label = "rest", "Rest"
+    done = logged.get(day.isoformat())
+    if done and kind == "rest":
+        kind, label = "strength", short_name(done[0])
+    return {"date": day.isoformat(), "kind": kind, "label": label, "done": bool(done)}
+
+
 def summary(data, today=None):
     """Counts only, no notes or weights: safe to show on goblin's home page."""
     today = today or date.today()
@@ -53,11 +117,13 @@ def summary(data, today=None):
     week_start = START.toordinal() + (week - 1) * 7
     total = sets = this_week = 0
     last = None
+    logged = {}  # date -> session ids
     for key, entry in data["logs"].items():
         m = SESSION_KEY.match(key)
         if not m or not isinstance(entry, dict):
             continue
         day = date.fromisoformat(m.group(1))
+        logged.setdefault(day.isoformat(), []).append(m.group(2))
         total += 1
         sets += sum(sum(1 for d in (e.get("done") or []) if d)
                     for e in (entry.get("ex") or {}).values() if isinstance(e, dict))
@@ -65,8 +131,22 @@ def summary(data, today=None):
             this_week += 1
         if last is None or day.isoformat() > last["date"]:
             last = {"date": day.isoformat(), "name": session_name(m.group(2))}
+    monday = date.fromordinal(today.toordinal() - today.weekday())
+    week_days = [day_card(date.fromordinal(monday.toordinal() + i), logged) for i in range(7)]
+    weeks = []
+    for w in range(1, WEEKS + 1):
+        first = START.toordinal() + (w - 1) * 7
+        days = [date.fromordinal(first + i) for i in range(7)]
+        weeks.append({
+            "week": w,
+            "kind": PHASE_KIND[w],
+            "planned": sum(1 for d in days if planned_session(d)),
+            "done": sum(len(logged.get(d.isoformat(), [])) for d in days),
+        })
     return {
         "today": today.isoformat(),
+        "weekDays": week_days,
+        "weekly": weeks,
         "week": week if 1 <= week <= WEEKS else None,
         "weeks": WEEKS,
         "races": RACES,
