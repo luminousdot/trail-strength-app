@@ -146,6 +146,19 @@ details.prep .body{padding:0 16px 16px;display:flex;flex-direction:column;gap:10
 .principles{display:flex;flex-direction:column;gap:12px;margin:0;padding:0;list-style:none}
 .principles li{display:flex;flex-direction:column;gap:2px}
 .principles b{font-family:var(--display);font-size:17px}
+.foodchips{display:flex;flex-wrap:wrap;gap:8px}
+.foodchips button{min-height:40px;padding:8px 12px;border-radius:999px;border:2px solid var(--line);background:var(--surface);color:var(--fg);font:inherit;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.foodchips button .icon{width:16px;height:16px;stroke-width:3;display:none}
+.foodchips button[aria-pressed="true"]{background:var(--done);border-color:var(--done);color:var(--done-ink)}
+.foodchips button[aria-pressed="true"] .icon{display:inline}
+.fuelrules{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.fuelrules li{display:flex;flex-direction:column;gap:2px;font-size:14px}
+.fueltip{display:flex;gap:10px;align-items:flex-start}
+.fueltip .icon{flex:none;color:var(--accent, currentColor);margin-top:2px}
+details.fuelrace{border-top:1px solid var(--line)}
+details.fuelrace summary{list-style:none;display:flex;justify-content:space-between;align-items:center;padding:10px 0;cursor:pointer;min-height:44px}
+details.fuelrace summary::-webkit-details-marker{display:none}
+details.fuelrace ul{margin:0 0 10px;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px}
 .quote{border-left:3px solid var(--accent, currentColor);padding:4px 12px;margin:0;font-style:italic}
 .last{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--fg);font-weight:500}
 .last .icon{color:var(--muted)}
@@ -234,6 +247,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 20V9M7 14l5-5 5 5M5 4h14"/></symbol>
   <symbol id="i-warm" viewBox="0 0 24 24"><path d="M12 3c1 3 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5 1-8.5z"/></symbol>
   <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17h.01"/></symbol>
+  <symbol id="i-fuel" viewBox="0 0 24 24"><path d="M10 3h4v3l2 3v11a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V9l2-3z"/><path d="M8 13h8"/></symbol>
   <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></symbol>
 </svg>
 
@@ -332,12 +346,87 @@ const RACE_WEEKS = [
     {t:"Mon 19 Apr", items:[["j1-b","Last strength session: Session B, light, 2 sets"],["j1-kit","Read the race's mandatory kit list on the official site and check every item"],["j1-start","Note start time, bib pickup, cut-off times and travel"]]},
     {t:"Tue 20 Apr", items:[["j2-prep","Trail Prep 1, then 40 min easy with 4 × 20 s strides. No speed session"],["j2-pack","Run with the full race vest loaded, to check it doesn't bounce or rub"]]},
     {t:"Wed 21 Apr", items:[["j3-run","Easy 30–40 min. No lifting"],["j3-shoes","Shoes and socks you've already done a 3-hour run in"],["j3-poles","Decide on poles, if allowed, and practise folding them"]]},
-    {t:"Thu 22 Apr", items:[["j4-rest","Rest or 20 min easy"],["j4-course","Study the 34 km profile and aid stations. Mark the long climbs to hike"],["j4-fuel","Plan fuel: about 60 g carbohydrate an hour from the first hour, and what you'll take at each aid station"]]},
-    {t:"Fri 23 Apr", items:[["j5-run","20 min easy with a few strides"],["j5-carbs","Carbohydrate-rich meals today and tomorrow. Nothing new"],["j5-sleep","8 hours of sleep. Friday night counts more than Saturday"],["j5-weather","Check the forecast and pack for rain and cold on the tops"]]},
+    {t:"Thu 22 Apr", items:[["j4-rest","Rest or 20 min easy"],["j4-course","Study the 34 km profile and aid stations. Mark the long climbs to hike"],["j4-fuel","Plan fuel: about 60 g carbohydrate an hour from the first hour, and what you'll take at each aid station. Start the carb build today"]]},
+    {t:"Fri 23 Apr", items:[["j5-run","20 min easy with a few strides"],["j5-carbs","Carbohydrate at every meal, about 7 g per kg. Nothing new"],["j5-sleep","8 hours of sleep. Friday night counts more than Saturday"],["j5-weather","Check the forecast and pack for rain and cold on the tops"]]},
     {t:"Sat 24 Apr", items:[["j6-shake","Rest or a 15 min shakeout"],["j6-pack","Pack the vest: mandatory kit, gels or bars for 5–6 hours, 1–1.5 l of water, salt"],["j6-dinner","Familiar dinner, early"],["j6-bed","In bed early. Alarm set, kit by the door"]]},
     {t:"Sun 25 Apr · Race", items:[["j7-bfast","Familiar breakfast 3 hours before the start"],["j7-pace","Start slower than feels right. Hike every steep climb"],["j7-eat","Eat every 30–40 min from the start, drink to thirst"],["j7-down","Save the legs for the last descents: short, quick steps"]]}
   ]}
 ];
+// Fueling, paraphrased from Matt Fitzgerald's The Endurance Diet (2016). Food-type ticks are saved as logs["food-YYYY-MM-DD"].
+const FUEL_HABITS = [
+  ["Eat everything","Most days, eat from all six whole-food types: vegetables and legumes, fruit, nuts and seeds and good oils, unprocessed meat and fish, whole grains, and dairy. Small treats are fine."],
+  ["Eat quality","Most of your food comes from those six. Sweets, fried food, processed meat and white flour stay small."],
+  ["Eat carb-centred","Build most meals and snacks around a carbohydrate food: oats, bread, rice, potatoes, pasta, fruit. Top endurance athletes get about 60–80% of their calories from carbohydrate."],
+  ["Eat enough","Let hunger and fullness set the amount. Don't diet in a training block: as training grows, you'll be hungrier, and that's the point."],
+  ["Eat individually","Notice which foods sit well, especially before hard runs, and adjust. The habits are the same for everyone, the menu isn't."]
+];
+const FUEL_DURING = [
+  ["Only when it counts","Easy runs and anything under about an hour need water at most. Food and sports drink help on hard or long sessions and in races over an hour."],
+  ["The 60-gram rule","Best performance comes at about 60–80 g of carbohydrate an hour. Even 30 g an hour makes a real difference. Simple sugars work fastest, and the \"sugar crash\" is a myth."],
+  ["Drink by thirst","Drink when you're thirsty and as much as thirst asks. Forcing more doesn't help and upsets the stomach."],
+  ["Gels need water","Gels carry sugar and salt but no water, so carry a flask with them. A sports drink gives you all three at once."],
+  ["Real food on long days","When a run is long enough to get hungry, you're missing a meal: banana, biscuits, trail mix, alongside gels or drink."],
+  ["During, and only during","Sports drinks and gels are performance tools for exercise. Outside a run they count as sweets."]
+];
+const FUEL_RACE = {
+  divca: {title:"Divča, about 2 hours", items:[
+    "Familiar breakfast 2–3 hours before the start, built around carbohydrate.",
+    "From about 40 minutes, a gel every 30–40 minutes. That's 1–2 gels, about 30–45 g an hour.",
+    "A few sips from the 500 ml flask with each gel, then drink by thirst.",
+    "No carb-loading needed. Normal carb-centred meals in race week, a bit more on Friday and Saturday."]},
+  jablanik: {title:"Jablanik, about 5–6 hours", items:[
+    "Thursday to Saturday: carbohydrate at every meal, about 7 g per kg of body weight a day (around 500 g at 70 kg). In a study the book cites, marathoners who ate that much in the days before ran far faster in the last miles.",
+    "Familiar breakfast 3 hours before the start.",
+    "About 60 g of carbohydrate an hour from the first hour: two gels an hour, or a gel plus half a banana or a bar.",
+    "From the second hour, mix in real food when you get hungry. Refill water at aid stations and drink by thirst.",
+    "Take salt or an electrolyte drink, more if it's warm.",
+    "Practise this exact plan, with the same gels and food, on Sunday long runs from mid-February."]}
+};
+const FUEL_HEALTH = [
+  "Daily carbohydrate: for up to about 2 hours of training a day, 5–7 g per kg of body weight (350–490 g at 70 kg). Don't count every day. Check a day or two if training starts to feel flat.",
+  "Oily fish twice a week (mackerel, sardines, salmon), or a fish oil with about 1,000 mg of EPA and DHA.",
+  "If you feel flat for weeks, ask your doctor to check ferritin and vitamin D. Ferritin isn't on a standard blood panel, and vitamin D runs low in winter. Don't take iron unless a test says so."
+];
+const FOOD_TYPES = [["veg","Vegetables"],["fruit","Fruit"],["nuts","Nuts & seeds"],["meat","Meat & fish"],["grain","Whole grains"],["dairy","Dairy"]];
+function fuelTip(d){
+  const dow = d.getDay(), w = weekOf(d), p = phaseOf(w), rw = raceWeekFor(d);
+  const race = RACES.findIndex(r=>iso(r.date)===iso(d));
+  if(race>=0){ const f = FUEL_RACE[race===0?"divca":"jablanik"]; return "Race day. "+f.items.slice(race===0?0:1, race===0?3:4).join(" "); }
+  if(rw && rw.id==="jablanik" && (dow===4||dow===5||dow===6)) return "Carb build for Sunday: carbohydrate at every meal and snack, about 7 g per kg today. Familiar foods only.";
+  if(rw && rw.id==="divca" && (dow===5||dow===6)) return "A little more carbohydrate than usual today. Familiar foods only, and an early dinner on Saturday.";
+  if(dow===0){
+    if(w>=13 && w<=21) return "Practise the Jablanik plan: about 60 g of carbohydrate an hour from the first hour, with the gels and food you'll race with. Drink by thirst.";
+    return "Long run. Over about 75 minutes, start a gel or sports drink at 40–45 minutes, 30–60 g an hour. Shorter or easy: water is enough. Drink by thirst.";
+  }
+  if(dow===2||dow===5) return rw ? "Easy run day. Normal carb-centred meals, water on the run." : "Speed day. A carb-centred meal 2–3 hours before. Under an hour of running: water is enough. Longer and hard: a sports drink or gel during.";
+  if(dow===1||dow===3) return (p && p.noLift) ? "Recovery week. Keep eating to hunger. This is when training turns into fitness." : "Lifting day. Normal carb-centred meals, water during the session. No sports drink needed.";
+  if(dow===6) return "Rest day. A carb-centred dinner sets up tomorrow's long run.";
+  return "Rest day. Still eat to hunger. Rest days rebuild what training used.";
+}
+let foodSaveTimer=null;
+function fuelCard(d){
+  const key = "food-"+iso(d);
+  const have = Object.assign({}, (logs[key]||{}).have||{});
+  const n = () => FOOD_TYPES.filter(([id])=>have[id]).length;
+  const frag = el(`<div class="card fuel"><div class="line" style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><h2>${ico("fuel","sm")} Fuel</h2><span class="num note" data-food-count>${n()} / 6 food types</span></div>
+    <p class="fueltip">${esc(fuelTip(d))}</p>
+    <p class="note">Tick each whole-food type you eat today. Most days, aim for all six.</p>
+    <div class="foodchips" role="group" aria-label="Food types eaten">${FOOD_TYPES.map(([id,t])=>`<button type="button" data-food="${id}" aria-pressed="${!!have[id]}">${ico("check")}${t}</button>`).join("")}</div>
+    <p class="status" data-food-msg role="status" aria-live="polite"></p></div>`);
+  const card = frag.firstElementChild;
+  card.querySelectorAll("[data-food]").forEach(btn=>btn.onclick=()=>{
+    const id=btn.dataset.food; have[id]=!have[id]; if(!have[id]) delete have[id];
+    btn.setAttribute("aria-pressed", String(!!have[id]));
+    card.querySelector("[data-food-count]").textContent = n()+" / 6 food types";
+    logs[key] = {type:"food", date:iso(d), have:{...have}, savedAt:new Date().toISOString()}; lsSet("tsl-logs",logs);
+    clearTimeout(foodSaveTimer);
+    foodSaveTimer = setTimeout(async()=>{
+      const ok = await sync();
+      const m = card.querySelector("[data-food-msg]"); if(m) m.textContent = ok ? "Saved and synced with goblin." : "Saved on this phone. It will sync when goblin is reachable.";
+    }, 700);
+  });
+  return frag;
+}
 function raceWeekFor(d){ return RACE_WEEKS.find(r=>{ const a=r.start.getTime(), b=a+7*dayMs; return d.getTime()>=a && d.getTime()<b; }) || null; }
 let raceSaveTimer=null;
 function renderRaceCheck(rw, openDay){
@@ -563,6 +652,7 @@ function renderToday(){
       ${dow===4||dow===6?`<div style="width:100%;display:flex;flex-direction:column;gap:8px"><div class="eyebrow">Ankle routine</div><ul><li>20 calf raises</li><li>20 tibialis raises</li><li>30 s single-leg balance per leg, eyes closed</li>${w>=10?"<li>20 pogo hops</li>":""}</ul></div>`:""}
       ${dow===2?prepList(1):dow===5?prepList(2):(p.noLift && (dow===1||dow===3))?prepList(1):""}
       <p class="note">Want to lift anyway? Pick Session A or B above.</p></div>`));
+    v.appendChild(fuelCard(selDate));
     return;
   }
 
@@ -652,6 +742,7 @@ function renderToday(){
     <button class="primary" id="save">${ico("save")}<span>Save session</span></button>
     <p class="status" id="saveMsg" role="status" aria-live="polite">${logs[key]?"Saved earlier. Saving again replaces it.":""}</p></div>`);
   v.appendChild(foot);
+  v.appendChild(fuelCard(selDate));
   updateProgress();
   const note = v.querySelector("#note"); note.value = draft.note||""; note.oninput=()=>{ draft.note=note.value; draft._dirty=true; };
   v.querySelector("#save").onclick = async(ev)=>{
@@ -687,6 +778,13 @@ function renderPlan(){
   v.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">
     <div class="card"><h2>Every week</h2><div class="week7">${week7}</div></div>
     <div class="card"><h2>Race week checklists</h2><p class="note">Each one shows on the Today tab during its race week. You can tick items here too.</p><div id="rcPlan" style="display:flex;flex-direction:column;gap:12px"></div></div>
+    <div class="card"><h2>${ico("fuel","sm")} Fueling</h2><p class="note">How to eat for this training, in short, from Matt Fitzgerald's <i>The Endurance Diet</i> (2016).</p>
+      <ul class="principles">${FUEL_HABITS.map(([t,d])=>`<li><b>${t}</b><span class="note">${d}</span></li>`).join("")}</ul>
+      <h3 style="margin-top:6px">During runs and races</h3>
+      <ul class="fuelrules">${FUEL_DURING.map(([t,d])=>`<li><b>${t}</b><span class="note">${d}</span></li>`).join("")}</ul>
+      <blockquote class="quote">“they’re not supposed to be healthy; they’re supposed to enhance performance.”</blockquote>
+      <div>${["divca","jablanik"].map(id=>`<details class="fuelrace"><summary><b>${ico("flag","sm")} ${FUEL_RACE[id].title}</b>${ico("right","sm")}</summary><ul>${FUEL_RACE[id].items.map(i=>`<li>${i}</li>`).join("")}</ul></details>`).join("")}
+        <details class="fuelrace"><summary><b>Every day</b>${ico("right","sm")}</summary><ul>${FUEL_HEALTH.map(i=>`<li>${i}</li>`).join("")}</ul></details></div></div>
     <div class="card"><h2>Principles</h2><p class="note">The ideas behind this plan, in short, from Jay Dicharry's <i>Running Rewired</i> (2017).</p>
       <blockquote class="quote">“Variety and repetition are the building blocks of motor learning.”</blockquote>
       <ul class="principles">${PRINCIPLES.map(([t,d])=>`<li><b>${t}</b><span class="note">${d}</span></li>`).join("")}</ul>
