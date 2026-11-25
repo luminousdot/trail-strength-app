@@ -79,6 +79,15 @@ button,label.btn,summary{cursor:pointer;touch-action:manipulation}
 .race-main .who span{font-size:13px;color:var(--muted)}
 .race-next{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
 .race-next b{color:var(--fg);font-weight:600}
+.rc-sum{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;padding:0;color:var(--fg);text-align:left;min-height:44px}
+.rc-sum .days{font-family:var(--display);font-weight:700;font-size:30px;line-height:1;color:var(--accent-text)}
+.rc-sum .days small{font-size:16px;margin-left:3px;color:var(--fg)}
+.rc-sum .to{flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc-sum .wk{font-size:13px;color:var(--muted);font-weight:600;white-space:nowrap}
+.rc-sum .chev{flex:none;color:var(--muted);transition:transform .2s}
+.racecard.open .rc-sum .chev{transform:rotate(90deg)}
+.rc-more{display:flex;flex-direction:column;gap:10px}
+.racecard:not(.open) .rc-more{display:none}
 .weekbar{display:flex;flex-direction:column;gap:6px}
 .weekbar .line{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
 .weekbar .line b{font-family:var(--display);font-size:18px}
@@ -881,7 +890,24 @@ function renderHeader(){
         <div class="track" role="img" aria-label="Week ${w} of 22, ${p.name}">${cells}</div>
 </div>`
     : `<div class="weekbar"><span class="badge">${w<1?"Plan starts Mon 23 Nov":"Plan complete"}</span></div>`;
-  document.getElementById("racecard").innerHTML = race + weekbar;
+  const card = document.getElementById("racecard");
+  let open = false; try{ open = localStorage.getItem("tsl-racecard")==="open"; }catch(e){}
+  if(nextIdx<0 || !p){ card.classList.add("open"); card.innerHTML = race + weekbar; return; }
+  // Collapsed: one line plus the week track. Tap to see race details and the phase.
+  const r = RACES[nextIdx], days = Math.round((r.date-today)/dayMs), other = RACES[nextIdx+1];
+  card.classList.toggle("open", open);
+  card.innerHTML = `<button type="button" class="rc-sum" aria-expanded="${open}" aria-controls="rcMore">
+      <span class="days num">${days===0?"Race day":days}${days===0?"":`<small>${days===1?"day":"days"}</small>`}</span>
+      <span class="to">${days===0?"":"to "}${r.name}</span><span class="wk num">Week ${w}</span>${ico("right","chev")}</button>
+    <div class="track" role="img" aria-label="Week ${w} of 22, ${p.name}">${cells}</div>
+    <div class="rc-more" id="rcMore"><div class="race-next"><span><b>${r.name}</b>, ${fmt(r.date)}</span><span class="num">${r.spec}</span></div>
+      ${other ? `<div class="race-next"><span>Then <b>${other.name}</b>, ${fmt(other.date)}</span><span class="num"><b>${Math.round((other.date-today)/dayMs)}</b> days</span></div>` : ""}
+      <div class="weekbar"><div class="line"><span><b>Week ${w}</b> <span class="muted">of 22</span></span><span class="badge accent">${p.name}</span></div></div></div>`;
+  card.querySelector(".rc-sum").onclick=()=>{
+    const o = !card.classList.contains("open"); card.classList.toggle("open", o);
+    card.querySelector(".rc-sum").setAttribute("aria-expanded", String(o));
+    try{ localStorage.setItem("tsl-racecard", o?"open":"closed"); }catch(e){}
+  };
 }
 
 function el(html){ const t=document.createElement("template"); t.innerHTML=html.trim(); return t.content; }
