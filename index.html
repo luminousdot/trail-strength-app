@@ -82,8 +82,8 @@ button,label.btn,summary{cursor:pointer;touch-action:manipulation}
 .rc-sum{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;padding:0;color:var(--fg);text-align:left;min-height:44px}
 .rc-sum .days{font-family:var(--display);font-weight:700;font-size:30px;line-height:1;color:var(--accent-text)}
 .rc-sum .days small{font-size:16px;margin-left:3px;color:var(--fg)}
-.rc-sum .to{flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rc-sum .wk{font-size:13px;color:var(--muted);font-weight:600;white-space:nowrap}
+.rc-sum .wk{flex:1;text-align:right;font-family:var(--display);font-weight:700;font-size:18px;white-space:nowrap}
+.rc-sum .wk .muted{font-family:var(--body);font-weight:500;font-size:15px}
 .rc-sum .chev{flex:none;color:var(--muted);transition:transform .2s}
 .racecard.open .rc-sum .chev{transform:rotate(90deg)}
 .rc-more{display:flex;flex-direction:column;gap:10px}
@@ -896,9 +896,9 @@ function renderHeader(){
   // Collapsed: one line plus the week track. Tap to see race details and the phase.
   const r = RACES[nextIdx], days = Math.round((r.date-today)/dayMs), other = RACES[nextIdx+1];
   card.classList.toggle("open", open);
-  card.innerHTML = `<button type="button" class="rc-sum" aria-expanded="${open}" aria-controls="rcMore">
+  card.innerHTML = `<button type="button" class="rc-sum" aria-expanded="${open}" aria-controls="rcMore" aria-label="${days} days to ${r.name}, week ${w} of 22">
       <span class="days num">${days===0?"Race day":days}${days===0?"":`<small>${days===1?"day":"days"}</small>`}</span>
-      <span class="to">${days===0?"":"to "}${r.name}</span><span class="wk num">Week ${w}</span>${ico("right","chev")}</button>
+      <span class="wk num">Week ${w} <span class="muted">of 22</span></span>${ico("right","chev")}</button>
     <div class="track" role="img" aria-label="Week ${w} of 22, ${p.name}">${cells}</div>
     <div class="rc-more" id="rcMore"><div class="race-next"><span><b>${r.name}</b>, ${fmt(r.date)}</span><span class="num">${r.spec}</span></div>
       ${other ? `<div class="race-next"><span>Then <b>${other.name}</b>, ${fmt(other.date)}</span><span class="num"><b>${Math.round((other.date-today)/dayMs)}</b> days</span></div>` : ""}
