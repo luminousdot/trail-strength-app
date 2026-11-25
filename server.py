@@ -87,7 +87,7 @@ def short_name(sid):
             "Power workout": "Power", "Performance workout": "Strength"}.get(session_name(sid), "Strength")
 
 
-def day_card(day, logged):
+def day_card(day, logged, runs=frozenset()):
     """One day of the week strip: what's planned and whether a session was logged."""
     sid = planned_session(day)
     w = (day - START).days // 7 + 1
@@ -105,7 +105,9 @@ def day_card(day, logged):
     else:
         kind, label = "rest", "Rest"
     done = logged.get(day.isoformat())
-    if done and kind == "rest":
+    if kind in ("run", "race"):
+        done = bool(done) or day.isoformat() in runs
+    elif done and kind == "rest":
         kind, label = "strength", short_name(done[0])
     return {"date": day.isoformat(), "kind": kind, "label": label, "done": bool(done)}
 
@@ -118,6 +120,8 @@ def summary(data, today=None):
     total = sets = this_week = 0
     last = None
     logged = {}  # date -> session ids
+    runs = {key[4:] for key, entry in data["logs"].items()
+            if key.startswith("run-") and isinstance(entry, dict) and entry.get("done")}
     for key, entry in data["logs"].items():
         m = SESSION_KEY.match(key)
         if not m or not isinstance(entry, dict):
@@ -132,7 +136,7 @@ def summary(data, today=None):
         if last is None or day.isoformat() > last["date"]:
             last = {"date": day.isoformat(), "name": session_name(m.group(2))}
     monday = date.fromordinal(today.toordinal() - today.weekday())
-    week_days = [day_card(date.fromordinal(monday.toordinal() + i), logged) for i in range(7)]
+    week_days = [day_card(date.fromordinal(monday.toordinal() + i), logged, runs) for i in range(7)]
     weeks = []
     for w in range(1, WEEKS + 1):
         first = START.toordinal() + (w - 1) * 7
