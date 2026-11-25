@@ -29,7 +29,7 @@ RACES = [
     {"name": "Divča Winter Trail", "date": "2027-03-07", "spec": "15 km · 640 m+"},
     {"name": "Jablanik Trail", "date": "2027-04-25", "spec": "34 km · 1800 m+"},
 ]
-SESSION_KEY = re.compile(r"^(\d{4}-\d\d-\d\d)_(A|B|P\d|SS|ME|W\d+)$")
+SESSION_KEY = re.compile(r"^(\d{4}-\d\d-\d\d)_(A|B|P\d|SS|ME|UG|UC|W\d+)$")
 
 
 def session_name(sid):
@@ -39,6 +39,10 @@ def session_name(sid):
         return "Simple & Sinister"
     if sid == "ME":
         return "Uphill strength"
+    if sid == "UG":
+        return "General strength"
+    if sid == "UC":
+        return "Core strength"
     if sid in ("W13", "W14"):
         return "Power workout"
     if sid.startswith("W"):
@@ -58,8 +62,61 @@ ME_WEEKS = {5, 6, 7, 9, 10, 11, 13, 14}
 RACE_DAYS = {r["date"] for r in RACES}
 
 
-def planned_session(day):
+# "Uphill Athlete only" program: mirrors UA_PHASES, UA_ME, uaSession(), uaSprints() and UA_RUNS in index.html.
+UA_KIND = {}
+for first, last, kind in [(1, 3, "base"), (4, 4, "rec"), (5, 7, "base"), (8, 8, "rec"), (9, 11, "base"), (12, 12, "rec"),
+                          (13, 14, "int"), (15, 15, "race"), (16, 16, "rec"), (17, 19, "spec"), (20, 21, "taper"), (22, 22, "race")]:
+    for w in range(first, last + 1):
+        UA_KIND[w] = kind
+UA_ME_WEEKS = {5, 6, 7, 9, 10, 11}
+# The home page colours weeks by the current mix's kinds, so map the book's week types onto them.
+UA_HOME_KIND = {"base": "build", "int": "build", "spec": "power", "taper": "power", "rec": "rec", "race": "race"}
+
+
+def is_ua(data):
+    prog = (data or {}).get("logs", {}).get("program")
+    return isinstance(prog, dict) and prog.get("value") == "ua"
+
+
+def ua_planned(day):
+    w = (day - START).days // 7 + 1
+    kind = UA_KIND.get(w)
+    if not kind:
+        return None
+    dow = day.isoweekday()
+    if dow == 1:
+        if kind == "base":
+            return "UG"
+        return None if (kind == "race" and w == 22) else "UC"
+    if dow == 3:
+        if kind == "base":
+            return "ME" if w in UA_ME_WEEKS else "UG"
+        if kind in ("int", "spec"):
+            return "UC"
+    return None
+
+
+def ua_run_label(day):
+    w = (day - START).days // 7 + 1
+    kind = UA_KIND.get(w)
+    dow = day.isoweekday()
+    if dow == 7:
+        return "Long run"
+    sprint_day = {"rec": 5, "spec": 5}.get(kind, 2)
+    sprints = kind is not None and not (kind == "race" and w == 22) and dow == sprint_day
+    if dow == 2 and kind == "spec":
+        return "Zone 4"
+    if dow == 5 and kind == "int":
+        return "Zone 3"
+    if dow == 5 and kind == "taper":
+        return "Sharpen"
+    return "Hills + easy" if sprints else "Easy"
+
+
+def planned_session(day, ua=False):
     """The strength session the app plans for a day, or None (same rules as autoSession in index.html)."""
+    if ua:
+        return ua_planned(day)
     w = (day - START).days // 7 + 1
     kind = PHASE_KIND.get(w)
     if not kind:
@@ -84,18 +141,21 @@ def planned_session(day):
 
 def short_name(sid):
     return {"Precision circuit": "Precision", "Simple & Sinister": "S&S", "Uphill strength": "Uphill",
+            "General strength": "Strength", "Core strength": "Core",
             "Power workout": "Power", "Performance workout": "Strength"}.get(session_name(sid), "Strength")
 
 
-def day_card(day, logged, runs=frozenset()):
+def day_card(day, logged, runs=frozenset(), ua=False):
     """One day of the week strip: what's planned and whether a session was logged."""
-    sid = planned_session(day)
+    sid = planned_session(day, ua)
     w = (day - START).days // 7 + 1
     dow = day.isoweekday()
     if day.isoformat() in RACE_DAYS:
         kind, label = "race", "Race"
     elif sid:
         kind, label = "strength", short_name(sid)
+    elif ua and dow in (2, 5, 7):
+        kind, label = "run", ua_run_label(day)
     elif dow == 2:
         kind, label = "run", "Hills + speed" if 1 <= w <= 14 else "Speed"
     elif dow == 5:
@@ -115,6 +175,7 @@ def day_card(day, logged, runs=frozenset()):
 def summary(data, today=None):
     """Counts only, no notes or weights: safe to show on goblin's home page."""
     today = today or date.today()
+    ua = is_ua(data)
     week = (today - START).days // 7 + 1
     week_start = START.toordinal() + (week - 1) * 7
     total = sets = this_week = 0
@@ -136,15 +197,15 @@ def summary(data, today=None):
         if last is None or day.isoformat() > last["date"]:
             last = {"date": day.isoformat(), "name": session_name(m.group(2))}
     monday = date.fromordinal(today.toordinal() - today.weekday())
-    week_days = [day_card(date.fromordinal(monday.toordinal() + i), logged, runs) for i in range(7)]
+    week_days = [day_card(date.fromordinal(monday.toordinal() + i), logged, runs, ua) for i in range(7)]
     weeks = []
     for w in range(1, WEEKS + 1):
         first = START.toordinal() + (w - 1) * 7
         days = [date.fromordinal(first + i) for i in range(7)]
         weeks.append({
             "week": w,
-            "kind": PHASE_KIND[w],
-            "planned": sum(1 for d in days if planned_session(d)),
+            "kind": UA_HOME_KIND[UA_KIND[w]] if ua else PHASE_KIND[w],
+            "planned": sum(1 for d in days if planned_session(d, ua)),
             "done": sum(len(logged.get(d.isoformat(), [])) for d in days),
         })
     return {
@@ -158,6 +219,7 @@ def summary(data, today=None):
         "sessionsThisWeek": this_week,
         "sets": sets,
         "last": last,
+        "program": "ua" if ua else "mix",
     }
 
 
