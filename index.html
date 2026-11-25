@@ -227,6 +227,11 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .restday{align-items:flex-start}
 .restday .big{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-text)}
 .restday .big .icon{width:30px;height:30px}
+.runtick{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;background:var(--sunk);border:2px solid transparent;border-radius:14px;text-align:left;font:700 17px var(--body);color:var(--fg);min-height:64px}
+.runtick[aria-pressed="true"]{border-color:var(--done)}
+.runtick[aria-pressed="true"] .chk{background:var(--done);border-color:var(--done);color:var(--done-ink)}
+.runtick .chk{flex:none;pointer-events:none}
+.runtick .note{display:block;font-weight:500}
 .restday ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;width:100%}
 .restday li{display:flex;gap:10px;align-items:center;padding:10px 12px;background:var(--sunk);border-radius:10px;font-weight:500}
 
@@ -882,6 +887,28 @@ function renderHeader(){
 function el(html){ const t=document.createElement("template"); t.innerHTML=html.trim(); return t.content; }
 
 // Hill sprints from Training for the Uphill Athlete: short, all-out, full rest. Done at the start of Tuesday's run.
+// Run done tick on run days. Saved as logs["run-YYYY-MM-DD"] = {type:"run", done, savedAt}; unticking keeps done:false so it syncs.
+function runTickHtml(d){
+  const on = !!(logs["run-"+iso(d)]||{}).done;
+  return `<button type="button" class="runtick" aria-pressed="${on}"><span class="chk" aria-hidden="true">${ico("check")}</span>
+    <span><span data-rt-label>${on?"Run done":"Tick when the run is done"}</span><span class="note" data-rt-msg role="status" aria-live="polite"></span></span></button>`;
+}
+let runSaveTimer=null;
+function bindRunTick(btn, d){
+  btn.onclick=()=>{
+    const key="run-"+iso(d), on = !(logs[key]||{}).done;
+    logs[key] = {type:"run", date:iso(d), done:on, savedAt:new Date().toISOString()}; lsSet("tsl-logs",logs);
+    btn.setAttribute("aria-pressed", String(on));
+    btn.querySelector("[data-rt-label]").textContent = on?"Run done":"Tick when the run is done";
+    const m = btn.querySelector("[data-rt-msg]"); m.textContent = "";
+    clearTimeout(runSaveTimer);
+    runSaveTimer = setTimeout(async()=>{ const ok = await sync(); m.textContent = ok ? "Saved and synced with goblin." : "Saved on this phone. It will sync when goblin is reachable."; }, 700);
+  };
+}
+function runName(d){
+  if(RACES.some(r=>iso(r.date)===iso(d))) return "Race";
+  const dow=d.getDay(); return dow===0?"Long run":(dow===2||dow===5)?(raceWeekFor(d)?"Easy run":"Speed run"):"Run";
+}
 function sprintCard(hs, w){
   const dm = DEMOS.hillsprint;
   const c = el(`<div class="card"><span class="eyebrow">Uphill Athlete · before the run</span><h2>Hill sprints, ${hs.reps} × 10 s</h2>
@@ -985,7 +1012,9 @@ function renderToday(){
       : dow===0 ? {i: isRaceDay?"flag":"run", t: isRaceDay?"Race day":"Long run", d: (isRaceDay ? "Race day. Good luck." : "The key run of the week. Hike the steep climbs.")}
       : {i:"moon", t:"Rest", d:"Easy walk and mobility."};
     v.appendChild(el(`<div class="card restday"><div class="big">${ico(what.i)}</div><h2>${what.t}</h2><p class="muted">${what.d}</p>
+      ${what.i==="run"||isRaceDay?runTickHtml(selDate):""}
       <p class="note">Want a workout anyway? Pick one above.</p></div>`));
+    const rt = v.querySelector(".runtick"); if(rt) bindRunTick(rt, selDate);
     const hs = (dow===2 && !rwk) ? hillSprints(w) : null;
     if(hs) v.appendChild(sprintCard(hs, w));
     v.appendChild(fuelCard(selDate));
@@ -1219,9 +1248,16 @@ function backupBar(v){
 }
 function renderHistory(){
   const v = document.getElementById("view");
-  const keys = Object.keys(logs).filter(k=>/^\d{4}-\d\d-\d\d_(A|B|P\d|SS|ME|W\d+)$/.test(k)).sort().reverse();
+  const keys = Object.keys(logs).filter(k=>/^\d{4}-\d\d-\d\d_(A|B|P\d|SS|ME|W\d+)$/.test(k) || (/^run-\d{4}-\d\d-\d\d$/.test(k) && logs[k].done))
+    .sort((a,b)=>{ const da=a.replace(/^run-/,"").slice(0,10), db=b.replace(/^run-/,"").slice(0,10); return da!==db ? (da<db?1:-1) : (a<b?1:-1); });
   if(!keys.length){ v.innerHTML = `<div class="card empty"><div class="big">${ico("history")}</div><h2>No sessions yet</h2><p class="muted">Log your first session on the Today tab. Saved sessions show up here, newest first.</p></div>`; backupBar(v); return; }
-  v.innerHTML = `<h2>${keys.length} session${keys.length===1?"":"s"} logged</h2><div class="hist">${keys.map(k=>{
+  const nRun = keys.filter(k=>k.startsWith("run-")).length, nSes = keys.length-nRun;
+  const head = [nSes?nSes+" session"+(nSes===1?"":"s"):"", nRun?nRun+" run"+(nRun===1?"":"s"):""].filter(Boolean).join(" and ");
+  v.innerHTML = `<h2>${head} logged</h2><div class="hist">${keys.map(k=>{
+    if(k.startsWith("run-")){ const d = new Date(k.slice(4)+"T00:00:00");
+      return `<button class="hitem" data-run="${esc(k.slice(4))}"><span class="date"><b>${d.getDate()}</b><span>${d.toLocaleDateString("en-GB",{month:"short"})}</span></span>
+      <span class="what"><b>${runName(d)} <span class="muted" style="font-weight:500">· ${d.toLocaleDateString("en-GB",{weekday:"short"})}</span></b><span class="note">Run</span></span>
+      <span class="right num">${ico("check","sm")}done${ico("right","sm")}</span></button>`; }
     const l = logs[k]; const ex = Object.values(l.ex||{});
     const doneSets = ex.reduce((a,e)=>a+(e.done||[]).filter(Boolean).length,0);
     const d = new Date(k.slice(0,10)+"T00:00:00");
@@ -1230,6 +1266,7 @@ function renderHistory(){
       <span class="right num">${doneSets} ${/^P/.test(l.session)?"ticks":"sets"}${ico("right","sm")}</span></button>`;
   }).join("")}</div>`;
   v.querySelectorAll(".hitem").forEach(b=>b.onclick=()=>{
+    if(b.dataset.run){ selDate=new Date(b.dataset.run+"T00:00:00"); selSession=null; draft=null; setView("today"); return; }
     const k=b.dataset.key; selDate=new Date(k.slice(0,10)+"T00:00:00"); selSession=k.slice(11); draft=null; setView("today");
   });
   backupBar(v);
