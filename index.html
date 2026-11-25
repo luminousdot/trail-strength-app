@@ -902,7 +902,7 @@ function renderHeader(){
     <div class="track" role="img" aria-label="Week ${w} of 22, ${p.name}">${cells}</div>
     <div class="rc-more" id="rcMore"><div class="race-next"><span><b>${r.name}</b>, ${fmt(r.date)}</span><span class="num">${r.spec}</span></div>
       ${other ? `<div class="race-next"><span>Then <b>${other.name}</b>, ${fmt(other.date)}</span><span class="num"><b>${Math.round((other.date-today)/dayMs)}</b> days</span></div>` : ""}
-      <div class="weekbar"><div class="line"><span><b>Week ${w}</b> <span class="muted">of 22</span></span><span class="badge accent">${p.name}</span></div></div></div>`;
+      <div class="race-next" style="align-items:center"><span>This week's phase</span><span class="badge accent">${p.name}</span></div></div>`;
   card.querySelector(".rc-sum").onclick=()=>{
     const o = !card.classList.contains("open"); card.classList.toggle("open", o);
     card.querySelector(".rc-sum").setAttribute("aria-expanded", String(o));
